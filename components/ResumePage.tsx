@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ResumeData, Experience, Education, CustomSection, TemplateType, DesignConfig, SkillCategory, Certification } from '../types';
 import { AIAssistantPopup, TextFormattingToolbar } from './resume/Toolbars';
@@ -7,6 +8,7 @@ import { EducationSection } from './resume/sections/EducationSection';
 import { SkillsSection } from './resume/sections/SkillsSection';
 import { CertificationsSection } from './resume/sections/CertificationsSection';
 import { AchievementsSection } from './resume/sections/AchievementsSection';
+import { getTemplate } from './resume/templates/registry';
 
 interface Props {
   page: number;
@@ -32,9 +34,18 @@ const ResumePage: React.FC<Props> = ({ page, data, onChange, isReadOnly = false 
   const [aiPopup, setAiPopup] = useState<{ type: 'summary' | 'experience', text: string, pos: { top: number, left: number }, targetId?: string } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const template = data.template || 'double-column';
-  const layout = data.layout || { left: ['experience', 'education'], right: ['summary', 'certifications', 'achievements'] };
   const design = data.design || DEFAULT_DESIGN;
+
+  // Resolve Template
+  const templateId = data.template || 'double-column';
+  const TemplateMeta = getTemplate(templateId) || getTemplate('double-column');
+  const TemplateComponent = TemplateMeta?.component;
+
+  // Page Logic
+  const pageInd = page - 1;
+  const layout = data.layout?.pages
+    ? (data.layout.pages[pageInd] || { left: [], right: [] })
+    : (page === 1 ? (data.layout || { left: ['experience', 'education'], right: ['summary', 'certifications', 'achievements'] }) : { left: [], right: [] });
 
   useEffect(() => {
     const handleSelection = () => {
@@ -79,9 +90,14 @@ const ResumePage: React.FC<Props> = ({ page, data, onChange, isReadOnly = false 
 
   const handleRemoveSection = (sectionId: string) => {
     const newData = structuredClone(data);
-    if (newData.layout) {
-      newData.layout.left = newData.layout.left.filter(id => id !== sectionId);
-      newData.layout.right = newData.layout.right.filter(id => id !== sectionId);
+    if (newData.layout?.pages) {
+      newData.layout.pages = newData.layout.pages.map(p => ({
+        left: p.left.filter(id => id !== sectionId),
+        right: p.right.filter(id => id !== sectionId)
+      }));
+    } else if (newData.layout) {
+      newData.layout.left = (newData.layout.left || []).filter(id => id !== sectionId);
+      newData.layout.right = (newData.layout.right || []).filter(id => id !== sectionId);
     }
     onChange(newData);
     setSelectedSectionId(null);
@@ -194,9 +210,6 @@ const ResumePage: React.FC<Props> = ({ page, data, onChange, isReadOnly = false 
       onSelectSection: handleSelectSection,
       onDeleteSection: () => handleRemoveSection(id),
     };
-
-    // Note: isTextSelected logic from ResumePage was: `selectionToolbarPos !== null`
-    // We pass this as `isTextSelected` to sections that need it (Experience, Education).
     const isTextSelected = selectionToolbarPos !== null;
 
     switch (id) {
@@ -267,12 +280,6 @@ const ResumePage: React.FC<Props> = ({ page, data, onChange, isReadOnly = false 
     }
   };
 
-  const isSidebarDark = template === 'double-column' || template === 'modern';
-  const marginPx = design.margins * 20;
-
-  const leftWeight = design.columnLayout === 1 ? 'w-[75%]' : design.columnLayout === 2 ? 'w-[65%]' : design.columnLayout === 3 ? 'w-[70%]' : 'w-[50%]';
-  const rightWeight = design.columnLayout === 1 ? 'w-[25%]' : design.columnLayout === 2 ? 'w-[35%]' : design.columnLayout === 3 ? 'w-[30%]' : 'w-[50%]';
-
   const commonStyle = {
     fontFamily: design.fontFamily,
     lineHeight: design.lineHeight,
@@ -281,7 +288,7 @@ const ResumePage: React.FC<Props> = ({ page, data, onChange, isReadOnly = false 
   return (
     <div
       ref={containerRef}
-      className={`relative flex h-full min-h-[1100px] ${template === 'ivy-league' || template === 'executive' ? 'flex-col' : ''} selection:bg-[#00C3A5] selection:text-white`}
+      className={`relative flex h-[1123px] w-[794px] overflow-hidden selection:bg-[#00C3A5] selection:text-white`}
       style={commonStyle}
       onClick={() => { if (!isReadOnly) { setSelectedSectionId(null); setSelectedItemId(null); setAiPopup(null); } }}
     >
@@ -297,60 +304,17 @@ const ResumePage: React.FC<Props> = ({ page, data, onChange, isReadOnly = false 
         />
       )}
 
-      {page === 1 ? (
-        <>
-          {(template === 'ivy-league' || template === 'executive') && (
-            <div className={`text-left p-12 ${template === 'executive' ? 'bg-slate-800 text-white text-center' : 'border-b border-slate-100 text-slate-800'}`}>
-              <h1 className="text-5xl font-extrabold tracking-tight mb-2 uppercase" contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => handleUpdate('personalInfo.name', e.currentTarget.textContent)}>{data.personalInfo.name}</h1>
-              <p className="text-xl font-medium" style={{ color: design.primaryColor }} contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => handleUpdate('personalInfo.title', e.currentTarget.textContent)}>{data.personalInfo.title}</p>
-              <div className={`mt-6 flex flex-wrap gap-6 text-sm ${template === 'executive' ? 'justify-center text-slate-400' : 'text-slate-500'}`}>
-                <span contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => handleUpdate('personalInfo.email', e.currentTarget.textContent?.replace('✉️ ', ''))}>✉️ {data.personalInfo.email}</span>
-                <span contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => handleUpdate('personalInfo.phone', e.currentTarget.textContent?.replace('📞 ', ''))}>📞 {data.personalInfo.phone}</span>
-                <span contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => handleUpdate('personalInfo.location', e.currentTarget.textContent?.replace('📍 ', ''))}>📍 {data.personalInfo.location}</span>
-              </div>
-            </div>
-          )}
-
-          <div className={`flex flex-grow w-full ${template === 'ivy-league' || template === 'executive' ? 'p-12 gap-12' : ''}`}>
-            <div
-              className={`${template === 'ivy-league' || template === 'executive' ? 'w-2/3' : leftWeight + ' bg-white text-slate-800'}`}
-              style={{ padding: !(template === 'ivy-league' || template === 'executive') ? `${marginPx}px` : undefined }}
-            >
-              {!(template === 'ivy-league' || template === 'executive') && (
-                <div className="mb-14">
-                  <h1 className="text-5xl font-extrabold tracking-tighter mb-2 uppercase" style={{ color: design.primaryColor }} contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => handleUpdate('personalInfo.name', e.currentTarget.textContent)}>{data.personalInfo.name}</h1>
-                  <p className="text-xl font-bold tracking-tight text-slate-700 leading-none" contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => handleUpdate('personalInfo.title', e.currentTarget.textContent)}>{data.personalInfo.title}</p>
-                </div>
-              )}
-              {layout.left.map(id => renderSectionById(id, false))}
-            </div>
-
-            <div
-              className={`${template === 'ivy-league' || template === 'executive' ? 'w-1/3' : rightWeight + ' flex flex-col gap-8 ' + (isSidebarDark ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-800')}`}
-              style={{ padding: !(template === 'ivy-league' || template === 'executive') ? `${marginPx}px` : undefined }}
-            >
-              {layout.right.map(id => renderSectionById(id, isSidebarDark))}
-
-              {!(template === 'ivy-league' || template === 'executive') && (
-                <div className={`mt-auto pt-10 border-t ${isSidebarDark ? 'border-white/10 text-white/50' : 'border-slate-200 text-slate-400'} text-xs font-medium`}>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4"><span className="opacity-40 text-lg">📞</span> <span contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => handleUpdate('personalInfo.phone', e.currentTarget.textContent)}>{data.personalInfo.phone}</span></div>
-                    <div className="flex items-center gap-4"><span className="opacity-40 text-lg">✉️</span> <span contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => handleUpdate('personalInfo.email', e.currentTarget.textContent)}>{data.personalInfo.email}</span></div>
-                    <div className="flex items-center gap-4"><span className="opacity-40 text-lg">📍</span> <span contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => handleUpdate('personalInfo.location', e.currentTarget.textContent)}>{data.personalInfo.location}</span></div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </>
+      {TemplateComponent ? (
+        <TemplateComponent
+          data={data}
+          layout={layout}
+          design={design}
+          isReadOnly={isReadOnly}
+          onUpdate={handleUpdate}
+          renderSection={renderSectionById}
+        />
       ) : (
-        <div className="w-full p-12">
-          <p className="text-slate-300 text-[10px] font-bold uppercase tracking-[0.5em] mb-12 border-b border-slate-100 pb-2">Additional Content Page</p>
-          <div className="flex gap-12">
-            <div className={leftWeight}></div>
-            <div className={`${rightWeight} ${isSidebarDark ? 'bg-slate-900' : 'bg-slate-50'} -m-12 p-12`}></div>
-          </div>
-        </div>
+        <div className="flex items-center justify-center w-full h-full text-slate-400">Template not found</div>
       )}
     </div>
   );

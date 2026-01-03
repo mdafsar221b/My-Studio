@@ -51,11 +51,12 @@ export interface CustomSection {
   items: any[];
 }
 
-export type TemplateType = 'double-column' | 'ivy-league' | 'executive' | 'modern';
+export type TemplateType = 'double-column' | 'ivy-league' | 'executive' | 'modern' | 'minimalist' | 'tech' | 'creative' | 'startup';
 
 export interface ResumeLayout {
-  left: string[];
-  right: string[];
+  left?: string[];
+  right?: string[];
+  pages?: { left: string[]; right: string[] }[];
 }
 
 export interface DesignConfig {

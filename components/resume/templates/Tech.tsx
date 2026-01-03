@@ -1,0 +1,62 @@
+
+import React from 'react';
+import { TemplateProps } from './registry';
+
+const Tech: React.FC<TemplateProps> = ({ data, layout, design, isReadOnly, onUpdate, renderSection }) => {
+    // Tech: Modern, slightly digital feel. 
+    // We use a sidebar layout but with distinct styling.
+
+    return (
+        <div className="flex flex-grow w-full bg-slate-50 text-slate-800 font-mono">
+            {/* Sidebar (Left this time for variety) */}
+            <div className="w-[30%] bg-slate-900 text-slate-300 p-8 flex flex-col gap-8 text-sm">
+                <div className="mb-8">
+                    {/* Profile Image Placeholer or Initials */}
+                    <div className="w-24 h-24 bg-teal-500 rounded-lg mb-6 flex items-center justify-center text-4xl font-bold text-slate-900 shadow-[4px_4px_0px_rgba(255,255,255,0.2)]">
+                        {data.personalInfo.name.charAt(0)}
+                    </div>
+
+                    <div className="space-y-4 text-xs font-mono">
+                        <div className="flex flex-col gap-1">
+                            <span className="text-teal-500 font-bold uppercase">{'>'} Contact</span>
+                            <span contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => onUpdate('personalInfo.email', e.currentTarget.textContent)}>{data.personalInfo.email}</span>
+                            <span contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => onUpdate('personalInfo.phone', e.currentTarget.textContent)}>{data.personalInfo.phone}</span>
+                            <span contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => onUpdate('personalInfo.location', e.currentTarget.textContent)}>{data.personalInfo.location}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column Content rendered in sidebar? No, 'right' usually implies secondary content. */}
+                {layout.right && layout.right.map(id => renderSection(id, true))}
+            </div>
+
+            {/* Main Content */}
+            <div className="w-[70%] p-10 bg-white">
+                <div className="border-b-4 border-slate-900 pb-8 mb-10">
+                    <h1
+                        className="text-6xl font-black tracking-tighter mb-2 uppercase text-slate-900"
+                        contentEditable={!isReadOnly}
+                        suppressContentEditableWarning
+                        onBlur={(e) => onUpdate('personalInfo.name', e.currentTarget.textContent)}
+                    >
+                        {data.personalInfo.name}
+                    </h1>
+                    <p
+                        className="text-2xl font-bold text-teal-600"
+                        contentEditable={!isReadOnly}
+                        suppressContentEditableWarning
+                        onBlur={(e) => onUpdate('personalInfo.title', e.currentTarget.textContent)}
+                    >
+                        {data.personalInfo.title}
+                    </p>
+                </div>
+
+                <div className="space-y-10">
+                    {layout.left && layout.left.map(id => renderSection(id, false))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Tech;

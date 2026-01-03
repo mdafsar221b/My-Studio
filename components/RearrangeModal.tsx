@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ResumeData, ResumeLayout } from '../types';
 
 interface Props {
@@ -9,47 +9,32 @@ interface Props {
 }
 
 const RearrangeModal: React.FC<Props> = ({ data, onChange, onClose }) => {
-  const [layout, setLayout] = useState<ResumeLayout>(
-    data.layout || { 
-      left: ['experience', 'education'], 
-      right: ['summary', 'certifications', 'achievements', ...(data.sections.map(s => s.id))] 
+  // --- Initial State ---
+  // If data has pages, load them. Else distribute flat layout.
+  const [pagesState, setPagesState] = useState<{ left: string[]; right: string[] }[]>(() => {
+    if (data.layout?.pages && data.layout.pages.length > 0) {
+      return data.layout.pages;
     }
-  );
+
+    // Fallback: Calculate from flat layout (similar to previous 'pages' derivation)
+    // We do a one-time calculation here to initialize state.
+    // For simplicity, puts everything on Page 1 if migrating.
+    const initialFlat = data.layout || { left: [], right: [] };
+    // Distribute to pages if flat layout exists is a bit complex to do blindly here. 
+    // Ideally we would run the estimation logic, but for now, dump to Page 1.
+    // The user can rearrange then.
+    return [{ left: initialFlat.left || [], right: initialFlat.right || [] }];
+  });
 
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [sourceCol, setSourceCol] = useState<'left' | 'right' | null>(null);
+  const [draggedPageIdx, setDraggedPageIdx] = useState<number | null>(null);
 
-  const handleDragStart = (id: string, col: 'left' | 'right') => {
-    setDraggedId(id);
-    setSourceCol(col);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (targetCol: 'left' | 'right', targetIdx: number) => {
-    if (!draggedId || !sourceCol) return;
-
-    const newLayout = { ...layout };
-    // Remove from source column
-    newLayout[sourceCol] = newLayout[sourceCol].filter(id => id !== draggedId);
-    
-    // Safety check for target index
-    const actualIdx = targetIdx > newLayout[targetCol].length ? newLayout[targetCol].length : targetIdx;
-    
-    // Add to target column at specific index
-    newLayout[targetCol].splice(actualIdx, 0, draggedId);
-
-    setLayout({ ...newLayout });
-    setDraggedId(null);
-    setSourceCol(null);
-  };
-
-  const saveRearrange = () => {
-    onChange({ ...data, layout });
-    onClose();
-  };
+  // --- Constants for "Realism" View ---
+  const PAPER_WIDTH = 420;
+  const PAPER_HEIGHT = PAPER_WIDTH * 1.414;
+  const CALC_HEIGHT = 1100;
+  const VISUAL_SCALE = PAPER_HEIGHT / CALC_HEIGHT;
 
   const getSectionTitle = (id: string) => {
     if (id === 'experience') return 'Experience';
@@ -57,96 +42,277 @@ const RearrangeModal: React.FC<Props> = ({ data, onChange, onClose }) => {
     if (id === 'summary') return 'Summary';
     if (id === 'certifications') return 'Certification';
     if (id === 'achievements') return 'Achievements';
+    if (id === 'skills') return 'Skills';
     return data.sections.find(s => s.id === id)?.title || id;
   };
 
+  const getEstimatedHeight = (id: string, colWidthPercent: number): number => {
+    // Height estimation in "Calculation Pixels" (Logical)
+    let h = 80; // Base padding/margin
+    const charWidth = 7;
+    const lineHeight = 24;
+    const widthPx = 800 * colWidthPercent;
+    const charsPerLine = widthPx / charWidth;
+
+    if (id === 'experience') {
+      return h + data.experience.reduce((acc, exp) => {
+        const roleLines = Math.ceil(exp.role.length / charsPerLine) || 1;
+        const companyLines = Math.ceil(exp.company.length / charsPerLine) || 1;
+        const descLines = exp.description.reduce((dAcc, d) => dAcc + (Math.ceil(d.length / charsPerLine) || 1), 0);
+        return acc + (roleLines * 30) + (companyLines * 26) + (descLines * lineHeight) + 40;
+      }, 0);
+    }
+    if (id === 'education') {
+      return h + data.education.reduce(() => 120, 0);
+    }
+    if (id === 'skills') {
+      const totalChars = data.skills.reduce((acc, cat) => acc + cat.skills.join('').length + cat.name.length, 0);
+      return h + (Math.ceil(totalChars / (charsPerLine * 0.9)) * 40) + (data.skills.length * 30);
+    }
+    if (id === 'summary') {
+      const lines = Math.ceil(data.summary.length / charsPerLine) || 1;
+      return h + (lines * lineHeight) + 20;
+    }
+    if (id === 'certifications') {
+      return h + (data.certifications.length * 80);
+    }
+    if (id === 'achievements') {
+      return h + (data.achievements.length * 60);
+    }
+    const custom = data.sections.find(s => s.id === id);
+    if (custom) {
+      return h + (custom.items.length * 60);
+    }
+    return 100;
+  };
+
+  // Hydrate items with heights for render
+  const pagesWithHeights = useMemo(() => {
+    return pagesState.map(p => ({
+      left: p.left.map(id => ({ id, height: getEstimatedHeight(id, 0.65) })),
+      right: p.right.map(id => ({ id, height: getEstimatedHeight(id, 0.35) }))
+    }));
+  }, [pagesState, data]);
+
+
+  // --- Events ---
+  const handleDragStart = (id: string, col: 'left' | 'right', pageIdx: number) => {
+    setDraggedId(id);
+    setSourceCol(col);
+    setDraggedPageIdx(pageIdx);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (targetCol: 'left' | 'right', targetPageIdx: number, dropIndexInCol: number) => {
+    if (!draggedId || !sourceCol || draggedPageIdx === null) return;
+
+    const newPages = structuredClone(pagesState); // Deep clone to be safe
+    const sourcePage = newPages[draggedPageIdx];
+
+    // Check if target page exists, if not add it
+    if (!newPages[targetPageIdx]) {
+      newPages[targetPageIdx] = { left: [], right: [] };
+    }
+    const targetPage = newPages[targetPageIdx];
+
+    // Remove from source
+    sourcePage[sourceCol] = sourcePage[sourceCol].filter((id: string) => id !== draggedId);
+
+    // Add to target
+    targetPage[targetCol].splice(dropIndexInCol, 0, draggedId);
+
+    setPagesState(newPages);
+    setDraggedId(null);
+    setSourceCol(null);
+    setDraggedPageIdx(null);
+  };
+
+  const handleAddNewPage = () => {
+    setPagesState([...pagesState, { left: [], right: [] }]);
+  };
+
+  const saveRearrange = () => {
+    onChange({
+      ...data,
+      layout: {
+        ...data.layout, // preserve other layout props if any (like flat left/right for fallback)
+        pages: pagesState
+      }
+    });
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex flex-col items-center justify-start overflow-y-auto px-4">
-      <div className="w-full max-w-4xl py-12 flex flex-col items-center gap-10">
-        <button 
-          onClick={onClose}
-          className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors"
-        >
-          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-        </button>
+    <div className="fixed inset-0 bg-slate-100/90 backdrop-blur-md z-[100] flex flex-col animate-in fade-in duration-300">
 
-        <h2 className="text-4xl md:text-5xl font-semibold text-white text-center leading-tight max-w-2xl">Hold & Drag the boxes to rearrange the sections</h2>
+      {/* Top Bar */}
+      <div className="h-16 bg-white border-b border-slate-200 shadow-sm shrink-0 flex items-center justify-between px-8 z-10">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+          </div>
+          <h2 className="text-lg font-bold text-slate-800">Visual Rearrange</h2>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-slate-500 hidden md:block">Drag sections between pages to optimize layout</span>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">Close</button>
+        </div>
+      </div>
 
-        <div className="flex flex-col items-center gap-6 w-full">
-          <p className="text-white/40 text-sm font-bold uppercase tracking-[0.3em]">Editor Preview</p>
-          
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-[750px] min-h-[500px] flex flex-col">
-            {/* Header Mock */}
-            <div className="h-20 bg-slate-50 border-2 border-slate-100 rounded-xl mb-6 flex items-center justify-center relative">
-               <span className="absolute left-6 text-slate-300">
-                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17a2 2 0 002-2c0-1.11-.89-2-2-2a2 2 0 00-2 2c0 1.11.89 2 2 2m6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2M9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6z"/></svg>
-               </span>
-               <span className="text-slate-300 font-bold text-xs uppercase tracking-[0.2em]">Personal Information (Fixed)</span>
+      {/* Scrollable Desk Area */}
+      <div className="flex-grow overflow-auto custom-scrollbar bg-[#f8fafc] w-full flex items-start justify-center pt-10 pb-20 relative">
+        <div className="flex gap-12 px-12 min-w-max items-start">
+
+          {pagesWithHeights.map((page, pageIdx) => (
+            <div key={pageIdx} className="flex flex-col gap-4 group">
+
+              {/* Page Label */}
+              <div className="flex items-center justify-between px-1">
+                <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Page 0{pageIdx + 1}</span>
+                {pageIdx === 0 && <span className="text-[10px] font-bold bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full uppercase">Cover</span>}
+              </div>
+
+              {/* Paper Sheet */}
+              <div
+                className="bg-white transition-all duration-500 ease-out relative"
+                style={{
+                  width: `${PAPER_WIDTH}px`,
+                  height: `${PAPER_HEIGHT}px`,
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)', // Deep elegant shadow
+                  border: '1px solid rgba(255,255,255,0.5)'
+                }}
+              >
+                {/* Paper Texture/Gradient overlay for realism */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-slate-50/50 to-white pointer-events-none"></div>
+
+                <div className="relative h-full w-full p-6 flex flex-col gap-4">
+
+                  {/* Header Visualization (Page 1 Only) */}
+                  {pageIdx === 0 && (
+                    <div className="shrink-0 h-[100px] border-b-2 border-slate-100 flex flex-col justify-end pb-4 mb-2">
+                      <div className="h-6 w-1/2 bg-slate-800 rounded-sm mb-2 opacity-80"></div>
+                      <div className="h-3 w-1/3 bg-slate-400 rounded-sm opacity-60"></div>
+                    </div>
+                  )}
+
+                  {/* Columns Container */}
+                  <div className="flex-grow flex gap-4 h-full overflow-hidden">
+
+                    {/* Left Column Drop Zone */}
+                    <div
+                      className={`w-[65%] h-full flex flex-col gap-3 transition-colors rounded-xl p-2
+                                            ${draggedId && sourceCol !== 'left' ? 'bg-indigo-50/50 ring-2 ring-indigo-100 border-dashed border-2 border-indigo-200' : 'border border-transparent'}
+                                            ${draggedId ? 'border-dashed border-slate-100' : ''}
+                                           `}
+                      onDragOver={handleDragOver}
+                      onDrop={() => handleDrop('left', pageIdx, page.left.length)}
+                    >
+                      {page.left.map((item, idx) => (
+                        <div
+                          key={item.id}
+                          draggable
+                          onDragStart={() => handleDragStart(item.id, 'left', pageIdx)}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => { e.stopPropagation(); handleDrop('left', pageIdx, idx); }}
+                          style={{ height: `${item.height * VISUAL_SCALE}px` }}
+                          className={`
+                                                        relative bg-white border border-slate-200 shadow-sm rounded-lg p-3 cursor-grab active:cursor-grabbing
+                                                        hover:shadow-md hover:border-indigo-300 hover:-translate-y-0.5 transition-all
+                                                        flex flex-col gap-2 group/card
+                                                        ${draggedId === item.id ? 'opacity-30 scale-95' : ''}
+                                                    `}
+                        >
+                          <div className="w-full h-1 bg-indigo-500 rounded-full opacity-0 group-hover/card:opacity-100 transition-opacity absolute top-0 left-0 right-0"></div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold uppercase text-slate-700">{getSectionTitle(item.id)}</span>
+                          </div>
+                          {/* Skeleton Lines */}
+                          <div className="space-y-1.5 opacity-20">
+                            <div className="h-1 w-full bg-slate-800 rounded-full"></div>
+                            <div className="h-1 w-5/6 bg-slate-800 rounded-full"></div>
+                            <div className="h-1 w-full bg-slate-800 rounded-full"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Right Column Drop Zone */}
+                    <div
+                      className={`w-[35%] h-full flex flex-col gap-3 transition-colors rounded-xl p-2
+                                            ${draggedId && sourceCol !== 'right' ? 'bg-indigo-50/50 ring-2 ring-indigo-100 border-dashed border-2 border-indigo-200' : 'border border-transparent'}
+                                            ${draggedId ? 'border-dashed border-slate-100' : ''}
+                                           `}
+                      onDragOver={handleDragOver}
+                      onDrop={() => handleDrop('right', pageIdx, page.right.length)}
+                    >
+                      {page.right.map((item, idx) => (
+                        <div
+                          key={item.id}
+                          draggable
+                          onDragStart={() => handleDragStart(item.id, 'right', pageIdx)}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => { e.stopPropagation(); handleDrop('right', pageIdx, idx); }}
+                          style={{ height: `${item.height * VISUAL_SCALE}px` }}
+                          className={`
+                                                        relative bg-white border border-slate-200 shadow-sm rounded-lg p-3 cursor-grab active:cursor-grabbing
+                                                        hover:shadow-md hover:border-indigo-300 hover:-translate-y-0.5 transition-all
+                                                        flex flex-col gap-2 group/card
+                                                        ${draggedId === item.id ? 'opacity-30 scale-95' : ''}
+                                                    `}
+                        >
+                          <div className="w-full h-1 bg-teal-500 rounded-full opacity-0 group-hover/card:opacity-100 transition-opacity absolute top-0 left-0 right-0"></div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-bold uppercase text-slate-600">{getSectionTitle(item.id)}</span>
+                          </div>
+                          <div className="space-y-1.5 opacity-20">
+                            <div className="h-1 w-full bg-slate-800 rounded-full"></div>
+                            <div className="h-1 w-2/3 bg-slate-800 rounded-full"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                  </div>
+                </div>
+              </div>
             </div>
+          ))}
 
-            <div className="flex gap-6 flex-grow">
-              {/* Left Column Area */}
-              <div 
-                className={`w-3/5 space-y-3 p-3 rounded-xl border-2 border-dashed transition-colors ${draggedId ? 'border-teal-200 bg-teal-50/20' : 'border-slate-100 bg-slate-50/30'}`}
-                onDragOver={handleDragOver}
-                onDrop={() => handleDrop('left', layout.left.length)}
-              >
-                 {layout.left.map((id, idx) => (
-                   <div
-                    key={id}
-                    draggable
-                    onDragStart={() => handleDragStart(id, 'left')}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => { e.stopPropagation(); handleDrop('left', idx); }}
-                    className={`bg-white border border-slate-200 rounded-xl p-5 cursor-grab active:cursor-grabbing transition-all group hover:border-[#00C3A5] hover:shadow-lg flex items-center gap-4 ${draggedId === id ? 'opacity-20 scale-95 grayscale' : ''}`}
-                   >
-                     <div className="flex flex-col gap-1 opacity-20 group-hover:opacity-100 group-hover:text-teal-500">
-                       <div className="w-4 h-0.5 bg-current rounded-full"></div>
-                       <div className="w-4 h-0.5 bg-current rounded-full"></div>
-                       <div className="w-4 h-0.5 bg-current rounded-full"></div>
-                     </div>
-                     <span className="text-slate-600 font-bold text-sm uppercase tracking-wide">{getSectionTitle(id)}</span>
-                   </div>
-                 ))}
-                 {layout.left.length === 0 && <div className="h-20 flex items-center justify-center text-slate-300 text-xs italic">Drop sections here</div>}
-              </div>
-
-              {/* Right Column Area */}
-              <div 
-                className={`w-2/5 space-y-3 p-3 rounded-xl border-2 border-dashed transition-colors ${draggedId ? 'border-teal-200 bg-teal-50/20' : 'border-slate-100 bg-slate-50/30'}`}
-                onDragOver={handleDragOver}
-                onDrop={() => handleDrop('right', layout.right.length)}
-              >
-                 {layout.right.map((id, idx) => (
-                   <div
-                    key={id}
-                    draggable
-                    onDragStart={() => handleDragStart(id, 'right')}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => { e.stopPropagation(); handleDrop('right', idx); }}
-                    className={`bg-white border border-slate-200 rounded-xl p-4 cursor-grab active:cursor-grabbing transition-all group hover:border-[#00C3A5] hover:shadow-lg flex items-center gap-4 ${draggedId === id ? 'opacity-20 scale-95 grayscale' : ''}`}
-                   >
-                     <div className="flex flex-col gap-1 opacity-20 group-hover:opacity-100 group-hover:text-teal-500">
-                       <div className="w-3 h-0.5 bg-current rounded-full"></div>
-                       <div className="w-3 h-0.5 bg-current rounded-full"></div>
-                       <div className="w-3 h-0.5 bg-current rounded-full"></div>
-                     </div>
-                     <span className="text-slate-600 font-bold text-[11px] uppercase tracking-wide">{getSectionTitle(id)}</span>
-                   </div>
-                 ))}
-                 {layout.right.length === 0 && <div className="h-20 flex items-center justify-center text-slate-300 text-xs italic">Drop sections here</div>}
-              </div>
+          {/* Add Page Ghost Element */}
+          <div
+            onClick={handleAddNewPage}
+            className="flex flex-col gap-4 opacity-30 hover:opacity-100 transition-opacity cursor-pointer grayscale hover:grayscale-0"
+          >
+            <span className="text-sm font-bold text-slate-400 uppercase tracking-widest pl-1">New Page</span>
+            <div
+              className="border-2 border-dashed border-slate-300 rounded-sm bg-white/50 flex flex-col items-center justify-center gap-2 hover:bg-white hover:border-indigo-300 transition-all"
+              style={{
+                width: `${PAPER_WIDTH}px`,
+                height: `${PAPER_HEIGHT}px`
+              }}
+            >
+              <span className="text-2xl text-slate-300 font-light">+</span>
+              <span className="text-sm font-bold text-slate-400 uppercase">Add Page</span>
             </div>
           </div>
-        </div>
 
-        <button 
-          onClick={saveRearrange}
-          className="mt-4 bg-[#00C3A5] text-white px-16 py-5 rounded-2xl text-xl font-bold shadow-2xl hover:bg-[#00a88e] hover:shadow-[#00C3A5]/20 transition-all transform hover:-translate-y-1 active:scale-95 mb-24"
-        >
-          Finished Rearranging
+        </div>
+      </div>
+
+      {/* Floating Action Bar */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 shadow-2xl rounded-full bg-white border border-slate-200 p-2 flex items-center gap-2 z-50 animate-in slide-in-from-bottom-6">
+        <button onClick={onClose} className="px-6 py-3 rounded-full font-bold text-slate-500 hover:bg-slate-50 transition-colors">
+          Cancel
+        </button>
+        <button onClick={saveRearrange} className="px-8 py-3 rounded-full bg-slate-900 text-white font-bold hover:bg-black transition-colors shadow-lg hover:shadow-xl hover:-translate-y-0.5 transform flex items-center gap-2">
+          <span>Save Layout</span>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
         </button>
       </div>
+
     </div>
   );
 };
