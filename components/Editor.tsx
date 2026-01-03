@@ -11,6 +11,7 @@ import ImproveTextPanel from './ImproveTextPanel';
 import DownloadPanel from './DownloadPanel';
 import PreviewModal from './PreviewModal';
 import { paginateResume } from './resume/pagination';
+import { generatePDF } from './resume/utils/pdf-generator';
 
 interface Props {
   data: ResumeData;
@@ -31,6 +32,7 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
   const [isImprovePanelOpen, setIsImprovePanelOpen] = useState(false);
   const [isDownloadPanelOpen, setIsDownloadPanelOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const isSidebarCollapsed = isTemplatePanelOpen || isDesignPanelOpen || isImprovePanelOpen || isDownloadPanelOpen;
 
@@ -232,6 +234,7 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
           {isDownloadPanelOpen && (
             <div className="w-[320px] h-full flex-shrink-0">
               <DownloadPanel
+                data={data}
                 onClose={() => setIsDownloadPanelOpen(false)}
                 onPreview={() => setIsPreviewModalOpen(true)}
                 isEmbeded={true}
@@ -258,17 +261,33 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
               </button>
 
               <button
-                onClick={() => setIsDownloadPanelOpen(true)}
-                className="w-12 h-12 bg-teal-500 rounded-full text-white shadow-lg shadow-teal-500/30 hover:bg-teal-600 hover:scale-110 active:scale-95 transition-all flex items-center justify-center group relative"
-                title="Download Resume"
+                onClick={async () => {
+                  setIsDownloading(true);
+                  try {
+                    await generatePDF(data);
+                  } catch (e) {
+                    console.error(e);
+                  } finally {
+                    setIsDownloading(false);
+                  }
+                }}
+                disabled={isDownloading}
+                className={`w-12 h-12 bg-teal-500 rounded-full text-white shadow-lg shadow-teal-500/30 hover:bg-teal-600 hover:scale-110 active:scale-95 transition-all flex items-center justify-center group relative ${isDownloading ? 'opacity-75 cursor-wait' : ''}`}
+                title="Download Resume PDF"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                <span className="absolute right-full mr-3 bg-slate-800 text-white text-xs font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Download</span>
+                {isDownloading ? (
+                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                )}
+                <span className="absolute right-full mr-3 bg-slate-800 text-white text-xs font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                  {isDownloading ? 'Generating PDF...' : 'Download PDF'}
+                </span>
               </button>
             </div>
 
             {pages.map((pageContent, idx) => (
-              <div key={idx} className="resume-shadow bg-white w-[794px] min-h-[1123px] p-0 relative group shrink-0">
+              <div key={idx} className="resume-shadow printable-resume-page bg-white w-[794px] min-h-[1123px] p-0 relative group shrink-0">
                 <ResumePage
                   pageIndex={idx}
                   totalPageCount={pages.length}

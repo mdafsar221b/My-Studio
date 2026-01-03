@@ -1,13 +1,34 @@
 
 import React from 'react';
 
+import { generatePDF } from './resume/utils/pdf-generator';
+import { ResumeData } from '../types';
+
 interface Props {
+  data: ResumeData;
   onClose: () => void;
   onPreview: () => void;
   isEmbeded?: boolean;
 }
 
-const DownloadPanel: React.FC<Props> = ({ onClose, onPreview, isEmbeded = false }) => {
+const DownloadPanel: React.FC<Props> = ({ data, onClose, onPreview, isEmbeded = false }) => {
+  const [isDownloading, setIsDownloading] = React.useState(false);
+
+  const handleDownload = async (id: string) => {
+    if (id === 'print') {
+      window.print();
+    } else if (id === 'pdf') {
+      setIsDownloading(true);
+      try {
+        await generatePDF(data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsDownloading(false);
+      }
+    }
+  };
+
   const options = [
     { id: 'pdf', label: 'PDF Document', icon: '', color: 'text-rose-500', bg: 'bg-rose-50' },
     { id: 'txt', label: 'Plain Text', icon: '', color: 'text-slate-500', bg: 'bg-slate-50' },
@@ -26,12 +47,13 @@ const DownloadPanel: React.FC<Props> = ({ onClose, onPreview, isEmbeded = false 
 
       <div className="flex-grow overflow-y-auto custom-scrollbar p-6 space-y-4">
         <p className="text-slate-500 text-sm mb-6">Choose your preferred format to export your professional resume.</p>
-        
+
         {options.map((opt) => (
-          <button 
+          <button
             key={opt.id}
             className={`w-full flex items-center gap-4 p-4 rounded-xl border border-slate-100 transition-all hover:border-indigo-200 hover:shadow-md hover:-translate-y-0.5 group ${opt.bg}/40`}
-            onClick={() => opt.id === 'print' ? window.print() : null}
+            onClick={() => handleDownload(opt.id)}
+            disabled={isDownloading}
           >
             <span className={`text-2xl ${opt.color} group-hover:scale-110 transition-transform`}>{opt.icon}</span>
             <div className="text-left">
@@ -42,7 +64,7 @@ const DownloadPanel: React.FC<Props> = ({ onClose, onPreview, isEmbeded = false 
         ))}
 
         <div className="pt-6">
-          <button 
+          <button
             onClick={onPreview}
             className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 active:scale-[0.98] flex items-center justify-center gap-2"
           >
@@ -54,8 +76,8 @@ const DownloadPanel: React.FC<Props> = ({ onClose, onPreview, isEmbeded = false 
 
       <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex-shrink-0">
         <div className="flex items-center gap-2 mb-4">
-           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Live Document sync: ON</span>
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Live Document sync: ON</span>
         </div>
         <button onClick={onClose} className="w-full py-3 border border-slate-200 text-slate-600 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-white transition-all shadow-sm active:scale-95">Back to Editor</button>
       </div>
