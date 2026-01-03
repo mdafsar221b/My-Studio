@@ -1,11 +1,13 @@
 
 import React, { useState, useMemo } from 'react';
+import { Command, Eye, Download, Plus, Minus, Loader2 } from 'lucide-react';
 import { ResumeData, CustomSection, TemplateType, DesignConfig } from '../types';
 import Sidebar from './Sidebar';
 import ResumePage from './ResumePage';
 import SectionModal from './SectionModal';
 import TemplatePanel from './TemplatePanel';
 import RearrangeModal from './RearrangeModal';
+import PremiumModal from './PremiumModal';
 import DesignPanel from './DesignPanel';
 import ImproveTextPanel from './ImproveTextPanel';
 import DownloadPanel from './DownloadPanel';
@@ -32,6 +34,7 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
   const [isImprovePanelOpen, setIsImprovePanelOpen] = useState(false);
   const [isDownloadPanelOpen, setIsDownloadPanelOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const isSidebarCollapsed = isTemplatePanelOpen || isDesignPanelOpen || isImprovePanelOpen || isDownloadPanelOpen;
@@ -84,7 +87,7 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#F0F2F5] overflow-hidden">
+    <div className="flex flex-col h-screen bg-shades-black-100 overflow-hidden text-shades-white-80">
       {isSectionModalOpen && (
         <SectionModal
           onClose={() => setIsSectionModalOpen(false)}
@@ -107,29 +110,33 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
         />
       )}
 
+      {isPremiumModalOpen && (
+        <PremiumModal
+          onClose={() => setIsPremiumModalOpen(false)}
+        />
+      )}
+
       {/* Header */}
-      <div className="h-16 bg-white border-b border-slate-200 z-[60] flex items-center justify-between px-6 flex-shrink-0">
+      <div className="h-16 bg-shades-black-100 border-b border-shades-black-80 z-[60] flex items-center justify-between px-6 flex-shrink-0">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-teal-600">
-            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z" />
-            </svg>
-            <span className="font-bold text-xl tracking-tight text-teal-700">MY STUDIO</span>
+          <div className="flex items-center gap-2 text-shades-white-100">
+            <Command size={24} />
+            <span className="font-bold text-xl tracking-tight text-shades-white-100">MY STUDIO</span>
           </div>
-          <div className="h-6 w-px bg-slate-200 mx-2"></div>
-          <button onClick={onBack} className="text-slate-500 hover:text-slate-700 text-sm font-medium">Exit Editor</button>
+          <div className="h-6 w-px bg-shades-black-80 mx-2"></div>
+          <button onClick={onBack} className="text-shades-black-60 hover:text-shades-white-100 text-sm font-medium transition-colors">Exit Editor</button>
         </div>
 
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-4 text-sm text-slate-500">
+          <div className="flex items-center gap-4 text-sm text-shades-black-60">
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+              <span className="w-2 h-2 rounded-full bg-shades-black-60 shadow-[0_0_8px_rgba(102,112,133,0.5)]"></span>
               Sign up to save work
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <button className="px-4 py-1.5 border border-teal-600 text-teal-600 rounded font-medium text-sm hover:bg-teal-50 transition-colors">Login</button>
-            <button className="px-4 py-1.5 bg-teal-500 text-white rounded font-medium text-sm hover:bg-teal-600 transition-colors shadow-sm">Sign Up</button>
+            <button className="px-4 py-1.5 border border-shades-black-70 text-shades-white-80 rounded-lg font-medium text-sm hover:bg-shades-black-80 transition-colors">Login</button>
+            <button className="px-4 py-1.5 bg-shades-white-100 text-shades-black-100 rounded-lg font-medium text-sm hover:bg-shades-white-90 transition-colors shadow-lg shadow-black/20">Sign Up</button>
           </div>
         </div>
       </div>
@@ -137,10 +144,13 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
       {/* Main Body */}
       <div className="flex flex-grow overflow-hidden relative">
         {/* Sidebar Controls */}
-        <div className={`${isSidebarCollapsed ? 'w-[72px]' : 'w-[260px]'} flex-shrink-0 bg-white border-r border-slate-200 flex flex-col z-[50] transition-all duration-300`}>
+        <div className={`${isSidebarCollapsed ? 'w-[72px]' : 'w-[260px]'} flex-shrink-0 bg-shades-black-100 border-r border-shades-black-80 flex flex-col z-[50] transition-all duration-300`}>
           <Sidebar
             data={data}
             onChange={onChange}
+            onOpenPremium={() => {
+              setIsPremiumModalOpen(true);
+            }}
             onOpenAddSection={() => {
               setIsTemplatePanelOpen(false);
               setIsRearrangeModalOpen(false);
@@ -244,7 +254,7 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
         </div>
 
         {/* Canvas Area */}
-        <div className="flex-grow flex flex-col items-center overflow-y-auto pt-12 pb-24 relative bg-[#F0F2F5] custom-scrollbar">
+        <div className="flex-grow flex flex-col items-center overflow-y-auto pt-12 pb-24 relative bg-shades-black-100 custom-scrollbar bg-[radial-gradient(#373F4E_1px,transparent_1px)] [background-size:20px_20px]">
           <div
             className="flex flex-col items-center gap-12 transition-all duration-300 origin-top"
             style={{ transform: `scale(${zoom / 100})` }}
@@ -253,11 +263,11 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
             <div className="absolute top-0 -right-20 flex flex-col gap-3">
               <button
                 onClick={() => setIsPreviewModalOpen(true)}
-                className="w-12 h-12 bg-white rounded-full text-slate-500 shadow-lg hover:text-teal-600 hover:scale-110 active:scale-95 transition-all flex items-center justify-center group relative"
+                className="w-12 h-12 bg-shades-black-90 rounded-full text-shades-white-60 border border-shades-black-80 shadow-lg hover:text-white hover:bg-shades-black-80 hover:scale-110 active:scale-95 transition-all flex items-center justify-center group relative"
                 title="Preview Resume"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                <span className="absolute right-full mr-3 bg-slate-800 text-white text-xs font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Preview</span>
+                <Eye size={20} />
+                <span className="absolute right-full mr-3 bg-shades-black-90 text-white text-xs font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Preview</span>
               </button>
 
               <button
@@ -272,15 +282,15 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
                   }
                 }}
                 disabled={isDownloading}
-                className={`w-12 h-12 bg-teal-500 rounded-full text-white shadow-lg shadow-teal-500/30 hover:bg-teal-600 hover:scale-110 active:scale-95 transition-all flex items-center justify-center group relative ${isDownloading ? 'opacity-75 cursor-wait' : ''}`}
+                className={`w-12 h-12 bg-shades-white-100 rounded-full text-shades-black-100 shadow-lg shadow-black/20 hover:bg-shades-white-90 hover:scale-110 active:scale-95 transition-all flex items-center justify-center group relative ${isDownloading ? 'opacity-75 cursor-wait' : ''}`}
                 title="Download Resume PDF"
               >
                 {isDownloading ? (
-                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  <Loader2 size={20} className="animate-spin opacity-75" />
                 ) : (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  <Download size={20} />
                 )}
-                <span className="absolute right-full mr-3 bg-slate-800 text-white text-xs font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                <span className="absolute right-full mr-3 bg-shades-black-90 text-white text-xs font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                   {isDownloading ? 'Generating PDF...' : 'Download PDF'}
                 </span>
               </button>
@@ -303,8 +313,12 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
 
           {/* Zoom Controls */}
           <div className="fixed bottom-8 right-8 flex flex-col gap-2 z-50">
-            <button onClick={() => setZoom(z => Math.min(150, z + 10))} className="w-10 h-10 bg-white shadow-lg border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-50 text-slate-600 font-bold transition-all transform hover:scale-105 active:scale-95">+</button>
-            <button onClick={() => setZoom(z => Math.max(30, z - 10))} className="w-10 h-10 bg-white shadow-lg border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-50 text-slate-600 font-bold transition-all transform hover:scale-105 active:scale-95">-</button>
+            <button onClick={() => setZoom(z => Math.min(150, z + 10))} className="w-10 h-10 bg-shades-black-90 shadow-xl border border-shades-black-80 rounded-full flex items-center justify-center hover:bg-shades-black-80 text-shades-white-60 hover:text-white font-bold transition-all transform hover:scale-105 active:scale-95">
+              <Plus size={20} />
+            </button>
+            <button onClick={() => setZoom(z => Math.max(30, z - 10))} className="w-10 h-10 bg-shades-black-90 shadow-xl border border-shades-black-80 rounded-full flex items-center justify-center hover:bg-shades-black-80 text-shades-white-60 hover:text-white font-bold transition-all transform hover:scale-105 active:scale-95">
+              <Minus size={20} />
+            </button>
           </div>
         </div>
       </div>

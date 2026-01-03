@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Palette, Sparkles, Share2, History, Undo2, LayoutTemplate, ArrowRightLeft, Plus, Check, Link, Download } from 'lucide-react';
 import { ResumeData } from '../types';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
   onOpenDesign: () => void;
   onOpenImprove: () => void;
   onOpenDownload: () => void;
+  onOpenPremium: () => void;
   onUndo: () => void;
   onRedo: () => void;
   canUndo: boolean;
@@ -19,15 +21,16 @@ interface Props {
   activePanel?: string;
 }
 
-const Sidebar: React.FC<Props> = ({ 
-  data, 
-  onChange, 
-  onOpenAddSection, 
-  onOpenTemplates, 
-  onOpenRearrange, 
+const Sidebar: React.FC<Props> = ({
+  data,
+  onChange,
+  onOpenAddSection,
+  onOpenTemplates,
+  onOpenRearrange,
   onOpenDesign,
   onOpenImprove,
   onOpenDownload,
+  onOpenPremium,
   onUndo,
   onRedo,
   canUndo,
@@ -36,16 +39,16 @@ const Sidebar: React.FC<Props> = ({
   activePanel
 }) => {
   const menuItems = [
-    { id: 'undo', label: 'Undo/Redo', icon: '⟲', group: 'history' },
-    { id: 'add', label: 'Add section', icon: '✎', group: 'edit' },
-    { id: 'rearrange', label: 'Rearrange', icon: '⇅', group: 'edit' },
-    { id: 'templates', label: 'Templates', icon: '▢', group: 'edit' },
-    { id: 'design', label: 'Design & Font', icon: '🎨', group: 'edit' },
-    { id: 'improve', label: 'Improve text', icon: '✨', group: 'ai' },
-    { id: 'check', label: 'Check', icon: '✓', group: 'ai' },
-    { id: 'download', label: 'Download', icon: '↓', premium: true, group: 'action' },
-    { id: 'share', label: 'Share', icon: '🔗', group: 'action' },
-    { id: 'history', label: 'History', icon: '⌛', premium: true, group: 'action' },
+    { id: 'undo', label: 'Undo/Redo', icon: <Undo2 size={20} />, group: 'history' },
+    { id: 'add', label: 'Add section', icon: <Plus size={20} />, group: 'edit' },
+    { id: 'rearrange', label: 'Rearrange', icon: <ArrowRightLeft size={20} />, group: 'edit' },
+    { id: 'templates', label: 'Templates', icon: <LayoutTemplate size={20} />, group: 'edit' },
+    { id: 'design', label: 'Design & Font', icon: <Palette size={20} />, group: 'edit' },
+    { id: 'improve', label: 'Improve text', icon: <Sparkles size={20} />, group: 'ai' },
+    { id: 'check', label: 'Check', icon: <Check size={20} />, group: 'ai' },
+    { id: 'download', label: 'Download', icon: <Download size={20} />, premium: true, group: 'action' },
+    { id: 'share', label: 'Share', icon: <Share2 size={20} />, group: 'action' },
+    { id: 'history', label: 'History', icon: <History size={20} />, premium: true, group: 'action' },
   ];
 
   const handleClick = (id: string) => {
@@ -55,85 +58,111 @@ const Sidebar: React.FC<Props> = ({
     if (id === 'design') onOpenDesign();
     if (id === 'improve') onOpenImprove();
     if (id === 'download') onOpenDownload();
+    if (id === 'premium') onOpenPremium();
     if (id === 'undo') onUndo();
   };
 
   return (
-    <div className={`flex flex-col h-full overflow-y-auto py-4 transition-all duration-300 ${isCollapsed ? 'items-center' : ''}`}>
+    <div className={`flex flex-col h-full overflow-y-auto py-4 transition-all duration-300 relative border-r border-shades-black-80 ${isCollapsed ? 'items-center bg-shades-black-100' : 'bg-shades-black-100'}`}>
       {!isCollapsed ? (
-        <div className="flex px-6 mb-6 gap-2">
-          <button 
+        <>
+          {/* Premium Button Expanded */}
+          <div className="px-6 mb-6">
+            <button
+              onClick={() => handleClick('premium')}
+              className="w-full py-3 bg-shades-white-100 text-shades-black-100 font-bold uppercase tracking-widest text-xs rounded-xl shadow-lg hover:shadow-xl hover:bg-shades-white-90 transition-all flex items-center justify-center gap-2 group active:scale-[0.98]"
+            >
+              <span className="text-sm">★</span> Get Premium
+            </button>
+          </div>
+
+          {/* Undo/Redo Expanded */}
+          <div className="flex px-6 mb-6 gap-2">
+            <button
+              onClick={onUndo}
+              disabled={!canUndo}
+              className={`flex-1 py-2 px-2 border border-shades-black-80 bg-shades-black-90 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all ${canUndo ? 'text-shades-white-60 hover:bg-shades-black-80 hover:text-shades-white-100 hover:border-shades-black-70' : 'text-shades-black-70 cursor-not-allowed'}`}
+            >
+              <span>⟲</span> Undo
+            </button>
+            <button
+              onClick={onRedo}
+              disabled={!canRedo}
+              className={`flex-1 py-2 px-2 border border-shades-black-80 bg-shades-black-90 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all ${canRedo ? 'text-shades-white-60 hover:bg-shades-black-80 hover:text-shades-white-100 hover:border-shades-black-70' : 'text-shades-black-70 cursor-not-allowed'}`}
+            >
+              Redo <span>⟳</span>
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="mb-4 flex flex-col gap-4">
+          {/* Premium Button Collapsed */}
+          <button
+            onClick={() => handleClick('premium')}
+            className="p-2 bg-shades-white-100 text-shades-black-100/90 rounded-lg hover:bg-shades-white-90 transition-all shadow-lg active:scale-95 flex items-center justify-center"
+            title="Premium"
+          >
+            ★
+          </button>
+
+          <div className="h-px w-6 bg-shades-black-80 mx-auto"></div>
+
+          {/* Undo/Redo Collapsed */}
+          <button
             onClick={onUndo}
             disabled={!canUndo}
-            className={`flex-1 py-1.5 px-2 border border-slate-200 rounded text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all ${canUndo ? 'text-slate-400 hover:bg-slate-50 hover:text-teal-600' : 'text-slate-200 cursor-not-allowed'}`}
+            title="Undo"
+            className={`p-2 transition-all rounded-lg flex items-center justify-center ${canUndo ? 'text-shades-white-60 hover:text-shades-white-100 hover:bg-shades-black-90' : 'text-shades-black-70 cursor-not-allowed'}`}
           >
-            <span>⟲</span> Undo
+            ⟲
           </button>
-          <button 
+          <button
             onClick={onRedo}
             disabled={!canRedo}
-            className={`flex-1 py-1.5 px-2 border border-slate-200 rounded text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all ${canRedo ? 'text-slate-400 hover:bg-slate-50 hover:text-teal-600' : 'text-slate-200 cursor-not-allowed'}`}
-          >
-            Redo <span>⟳</span>
-          </button>
-        </div>
-      ) : (
-        <div className="mb-8 flex flex-col gap-4">
-           <button 
-            onClick={onUndo} 
-            disabled={!canUndo}
-            title="Undo"
-            className={`p-2 transition-colors ${canUndo ? 'text-slate-400 hover:text-teal-600' : 'text-slate-100 cursor-not-allowed'}`}
-           >
-            ⟲
-           </button>
-           <button 
-            onClick={onRedo} 
-            disabled={!canRedo}
             title="Redo"
-            className={`p-2 transition-colors ${canRedo ? 'text-slate-400 hover:text-teal-600' : 'text-slate-100 cursor-not-allowed'}`}
-           >
+            className={`p-2 transition-all rounded-lg flex items-center justify-center ${canRedo ? 'text-shades-white-60 hover:text-shades-white-100 hover:bg-shades-black-90' : 'text-shades-black-70 cursor-not-allowed'}`}
+          >
             ⟳
-           </button>
-           <div className="h-px w-6 bg-slate-100 mx-auto"></div>
+          </button>
+          <div className="h-px w-6 bg-shades-black-80 mx-auto"></div>
         </div>
       )}
 
-      <div className="space-y-1 w-full">
+      <div className="space-y-1 w-full px-2">
         {menuItems.map((item) => {
           const isActive = activePanel === item.id;
           // Skip the undo item in the list because it's already at the top
           if (item.id === 'undo') return null;
-          
+
           return (
             <div key={item.id} className="w-full">
-               {(item.id === 'improve' || item.id === 'download') && !isCollapsed && <div className="mx-6 h-px bg-slate-100 my-2"></div>}
-               <button 
+              {(item.id === 'improve' || item.id === 'download') && !isCollapsed && <div className="mx-4 h-px bg-shades-black-80 my-2"></div>}
+              <button
                 onClick={() => handleClick(item.id)}
-                className={`w-full flex items-center group transition-all relative ${isCollapsed ? 'justify-center py-4' : 'px-6 py-2.5 hover:bg-slate-50'} ${isActive ? 'bg-teal-50/50 text-teal-600' : 'text-slate-600'}`}
+                className={`w-full flex items-center group transition-all relative rounded-xl ${isCollapsed ? 'justify-center py-4' : 'px-4 py-3 hover:bg-shades-black-90'} ${isActive ? 'bg-shades-black-80 text-shades-white-100 shadow-md shadow-black/20' : 'text-shades-white-60'}`}
                 title={isCollapsed ? item.label : ''}
-               >
-                 <span className={`text-xl transition-all ${isCollapsed ? 'mr-0' : 'mr-3'} ${isActive ? 'text-teal-600 opacity-100' : 'opacity-60 group-hover:opacity-100 group-hover:text-teal-600'}`}>
-                   {item.icon}
-                 </span>
-                 {!isCollapsed && <span className={`text-sm font-medium ${isActive ? 'text-teal-600' : ''}`}>{item.label}</span>}
-                 {item.premium && !isCollapsed && (
-                   <span className="ml-auto text-[10px] text-orange-500">★</span>
-                 )}
-                 {isActive && isCollapsed && (
-                   <div className="absolute right-0 top-0 bottom-0 w-1 bg-teal-500 rounded-l-full"></div>
-                 )}
-               </button>
+              >
+                <span className={`text-xl transition-all ${isCollapsed ? 'mr-0' : 'mr-3'} ${isActive ? 'text-shades-white-100 opacity-100' : 'opacity-60 group-hover:opacity-100 group-hover:text-shades-white-80'}`}>
+                  {item.icon}
+                </span>
+                {!isCollapsed && <span className={`text-sm font-medium ${isActive ? 'text-shades-white-100' : ''}`}>{item.label}</span>}
+                {item.premium && !isCollapsed && (
+                  <span className="ml-auto text-[10px] text-shades-white-60 drop-shadow-sm">★</span>
+                )}
+                {isActive && isCollapsed && (
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-shades-white-100 rounded-l-full shadow-[0_0_10px_rgba(255,255,255,0.2)]"></div>
+                )}
+              </button>
             </div>
           );
         })}
       </div>
 
-      <div className={`mt-auto pt-6 border-t border-slate-100 ${isCollapsed ? 'pb-4' : 'px-6 pb-6'}`}>
+      <div className={`mt-auto pt-6 border-t border-shades-black-80 ${isCollapsed ? 'pb-4' : 'px-6 pb-6'}`}>
         <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
-          {!isCollapsed && <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Branding</span>}
-          <div className={`w-10 h-5 bg-teal-500 rounded-full relative ${isCollapsed ? 'transform -rotate-90 scale-75' : ''}`}>
-            <div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+          {!isCollapsed && <span className="text-xs font-semibold text-shades-white-80 uppercase tracking-wider">My Studio</span>}
+          <div className={`w-8 h-8 rounded-full bg-shades-black-80 flex items-center justify-center border border-shades-black-70 shadow-lg shadow-black/20 ${isCollapsed ? 'scale-75' : ''}`}>
+            <span className="text-shades-white-100 text-xs font-bold">M</span>
           </div>
         </div>
       </div>
