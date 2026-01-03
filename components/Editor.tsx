@@ -246,9 +246,29 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
             className="flex flex-col items-center gap-12 transition-all duration-300 origin-top"
             style={{ transform: `scale(${zoom / 100})` }}
           >
-            {/* Page Rendering */}
+            {/* Dynamic Page Rendering */}
+            <div className="absolute top-0 -right-20 flex flex-col gap-3">
+              <button
+                onClick={() => setIsPreviewModalOpen(true)}
+                className="w-12 h-12 bg-white rounded-full text-slate-500 shadow-lg hover:text-teal-600 hover:scale-110 active:scale-95 transition-all flex items-center justify-center group relative"
+                title="Preview Resume"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                <span className="absolute right-full mr-3 bg-slate-800 text-white text-xs font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Preview</span>
+              </button>
+
+              <button
+                onClick={() => setIsDownloadPanelOpen(true)}
+                className="w-12 h-12 bg-teal-500 rounded-full text-white shadow-lg shadow-teal-500/30 hover:bg-teal-600 hover:scale-110 active:scale-95 transition-all flex items-center justify-center group relative"
+                title="Download Resume"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                <span className="absolute right-full mr-3 bg-slate-800 text-white text-xs font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Download</span>
+              </button>
+            </div>
+
             {pages.map((pageContent, idx) => (
-              <div key={idx} className="resume-shadow bg-white w-[850px] min-h-[1100px] p-0 relative group shrink-0">
+              <div key={idx} className="resume-shadow bg-white w-[794px] min-h-[1123px] p-0 relative group shrink-0">
                 <ResumePage
                   pageIndex={idx}
                   totalPageCount={pages.length}

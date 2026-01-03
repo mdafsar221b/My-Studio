@@ -44,14 +44,6 @@ export const TEMPLATES: TemplateMeta[] = [
         thumbnailClass: 'bg-teal-700'
     },
     {
-        id: 'ivy-league',
-        name: 'Ivy League',
-        component: IvyLeague,
-        isPremium: false,
-        tags: ['Academic', 'Tradition'],
-        thumbnailClass: 'bg-slate-800'
-    },
-    {
         id: 'executive',
         name: 'Executive',
         component: Executive,
@@ -60,12 +52,20 @@ export const TEMPLATES: TemplateMeta[] = [
         thumbnailClass: 'bg-blue-900'
     },
     {
-        id: 'modern',
-        name: 'Modern',
-        component: Modern,
-        isPremium: false,
-        tags: ['Clean', 'Bold'],
-        thumbnailClass: 'bg-rose-700'
+        id: 'creative',
+        name: 'Creative',
+        component: Creative,
+        isPremium: true,
+        tags: ['Artistic', 'Bold'],
+        thumbnailClass: 'bg-orange-300'
+    },
+    {
+        id: 'startup',
+        name: 'Startup',
+        component: Startup,
+        isPremium: true,
+        tags: ['Modern', 'Punchy'],
+        thumbnailClass: 'bg-lime-400'
     },
     {
         id: 'minimalist',
@@ -84,20 +84,20 @@ export const TEMPLATES: TemplateMeta[] = [
         thumbnailClass: 'bg-slate-900'
     },
     {
-        id: 'creative',
-        name: 'Creative',
-        component: Creative,
-        isPremium: true,
-        tags: ['Artistic', 'Bold'],
-        thumbnailClass: 'bg-orange-300'
+        id: 'modern',
+        name: 'Modern',
+        component: Modern,
+        isPremium: false,
+        tags: ['Clean', 'Bold'],
+        thumbnailClass: 'bg-rose-700'
     },
     {
-        id: 'startup',
-        name: 'Startup',
-        component: Startup,
-        isPremium: true,
-        tags: ['Modern', 'Punchy'],
-        thumbnailClass: 'bg-lime-400'
+        id: 'ivy-league',
+        name: 'Ivy League',
+        component: IvyLeague,
+        isPremium: false,
+        tags: ['Academic', 'Tradition'],
+        thumbnailClass: 'bg-slate-800'
     }
 ];
 
