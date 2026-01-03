@@ -49,6 +49,19 @@ export const EducationSection: React.FC<Props> = ({
         onUpdate(newItems);
     };
 
+    const handleReorder = (sourceId: string, targetId: string) => {
+        const sourceIndex = education.findIndex(e => e.id === sourceId);
+        const targetIndex = education.findIndex(e => e.id === targetId);
+
+        if (sourceIndex === -1 || targetIndex === -1) return;
+
+        const newItems = [...education];
+        const [movedItem] = newItems.splice(sourceIndex, 1);
+        newItems.splice(targetIndex, 0, movedItem);
+
+        onUpdate(newItems);
+    };
+
     return (
         <EditableSection
             id="education"
@@ -72,6 +85,7 @@ export const EducationSection: React.FC<Props> = ({
                         onDelete={() => onDeleteEntry(edu.id)}
                         isReadOnly={isReadOnly}
                         isTextSelected={isTextSelected}
+                        onReorder={handleReorder}
                     >
                         <div className="flex justify-between items-start">
                             <div>

@@ -1,5 +1,5 @@
 {
   "name": "AI Resume Architect",
-  "description": "A powerful resume builder that parses existing resumes using Gemini AI and provides a professional, multi-page editing environment similar to Enhancv.",
+  "description": "A powerful resume builder that parses existing resumes  and provides a professional, multi-page editing environment",
   "requestFramePermissions": []
 }

@@ -15,8 +15,8 @@ export interface PageContent {
 
 const PAGE_HEIGHT = 1123;
 const PADDING_Y = 96;
-const CHAR_WIDTH_AVG = 7;
-const LINE_HEIGHT_BASE = 24; // Base line height
+const CHAR_WIDTH_AVG = 6.4; // Reduced from 7 to allow more text per line
+const LINE_HEIGHT_BASE = 22; // Reduced from 24
 
 const estimateTextHeight = (text: string, widthPx: number, design: DesignConfig): number => {
     if (!text) return 0;
@@ -32,8 +32,8 @@ const estimateTextHeight = (text: string, widthPx: number, design: DesignConfig)
 
 const getSectionHeight = (id: string, data: ResumeData, widthPx: number, design: DesignConfig, itemRange?: [number, number]): number => {
     let h = 0;
-    // Section Header Height (approx)
-    h += 40 * (design.fontSize === 'large' ? 1.2 : 1);
+    // Section Header Height (approx) - Reduced padding
+    h += 34 * (design.fontSize === 'large' ? 1.2 : 1);
 
     if (id === 'summary') {
         h += estimateTextHeight(data.summary, widthPx, design);
@@ -42,19 +42,19 @@ const getSectionHeight = (id: string, data: ResumeData, widthPx: number, design:
     else if (id === 'experience') {
         const list = itemRange ? data.experience.slice(itemRange[0], itemRange[1]) : data.experience;
         list.forEach(exp => {
-            h += 30; // Role/Company header
-            h += 20; // Date/Loc
+            h += 24; // Role/Company header (Reduced from 30)
+            h += 18; // Date/Loc (Reduced from 20)
             exp.description.forEach(desc => {
                 h += estimateTextHeight(desc, widthPx, design);
             });
-            h += 30; // Item spacing
+            h += 16; // Item spacing (Reduced from 30)
         });
     }
     else if (id === 'education') {
         const list = itemRange ? data.education.slice(itemRange[0], itemRange[1]) : data.education;
         list.forEach(edu => {
-            h += 60; // Approximate height for an edu entry
-            h += 20; // Spacing
+            h += 50; // Approximate height for an edu entry (Reduced from 60)
+            h += 12; // Spacing (Reduced from 20)
         });
     }
     else if (id === 'skills') {
@@ -143,7 +143,7 @@ export const paginateResume = (data: ResumeData): PageContent[] => {
                 const availableSpace = (PAGE_HEIGHT - marginPx) - y;
 
                 // If very little space, just move to next
-                if (availableSpace < 100) {
+                if (availableSpace < 40) {
                     pIdx++;
                     y = marginPx + 50; // New page start (plus header safety if p1? no, p2 has no big header)
                     if (!finalPages[pIdx]) finalPages[pIdx] = { pageIndex: pIdx, left: [], right: [] };

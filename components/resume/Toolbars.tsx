@@ -140,8 +140,21 @@ export const SectionToolbar: React.FC<{ onAdd?: () => void; onDelete?: () => voi
 
 // --- ItemToolbar ---
 
-export const ItemToolbar: React.FC<{ onAdd?: () => void; onDelete?: () => void }> = ({ onAdd, onDelete }) => (
+export const ItemToolbar: React.FC<{ onAdd?: () => void; onDelete?: () => void; onDragStart?: (e: React.DragEvent) => void }> = ({ onAdd, onDelete, onDragStart }) => (
     <div className="absolute -top-14 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-white shadow-2xl border border-slate-200 rounded-xl p-1.5 z-[110] animate-in fade-in slide-in-from-bottom-4 duration-200 ring-4 ring-black/5">
+        {onDragStart && (
+            <>
+                <div
+                    onDragStart={onDragStart}
+                    draggable
+                    className="p-2.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600 rounded-lg transition-all cursor-grab active:cursor-grabbing"
+                    title="Drag to reorder"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16" /></svg>
+                </div>
+                <div className="w-px h-6 bg-slate-100 mx-1"></div>
+            </>
+        )}
         <button
             onClick={(e) => { e.stopPropagation(); onAdd?.(); }}
             className="bg-[#2ECB8F] text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-[#27b37d] transition-all"
@@ -163,13 +176,106 @@ export const ItemToolbar: React.FC<{ onAdd?: () => void; onDelete?: () => void }
 // --- TextFormattingToolbar ---
 
 export const TextFormattingToolbar: React.FC<{ position: { top: number; left: number } }> = ({ position }) => {
+    const [showLinkInput, setShowLinkInput] = useState(false);
+    const [linkUrl, setLinkUrl] = useState('');
+    const [savedRange, setSavedRange] = useState<Range | null>(null);
+
     const handleFormat = (command: string, value?: string) => {
         document.execCommand(command, false, value);
     };
 
+    const handleLinkClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            setSavedRange(range);
+
+            let node = range.commonAncestorContainer;
+            if (node.nodeType === 3 && node.parentElement) node = node.parentElement;
+
+            const anchor = (node as HTMLElement).closest('a');
+            setLinkUrl(anchor ? anchor.getAttribute('href') || '' : '');
+
+            setShowLinkInput(true);
+        }
+    };
+
+    const handleSaveLink = (e?: React.FormEvent) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+
+        if (savedRange) {
+            const selection = window.getSelection();
+            if (selection) {
+                selection.removeAllRanges();
+                selection.addRange(savedRange);
+
+                if (linkUrl) {
+                    document.execCommand('createLink', false, linkUrl);
+                    if (!document.queryCommandState('bold')) {
+                        document.execCommand('bold');
+                    }
+                } else {
+                    document.execCommand('unlink');
+                }
+            }
+        }
+        setShowLinkInput(false);
+        setSavedRange(null);
+    };
+
+    const handleCancelLink = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Restore selection
+        if (savedRange) {
+            const selection = window.getSelection();
+            if (selection) {
+                selection.removeAllRanges();
+                selection.addRange(savedRange);
+            }
+        }
+        setShowLinkInput(false);
+        setSavedRange(null);
+    };
+
+    if (showLinkInput) {
+        return (
+            <div
+                className="text-formatting-toolbar absolute flex items-center gap-1 bg-slate-800 text-white rounded-full px-1.5 py-1.5 shadow-2xl z-[220] animate-in fade-in zoom-in-95 duration-150 border border-white/10 backdrop-blur-sm pointer-events-auto"
+                style={{
+                    top: `${position.top - 12}px`,
+                    left: `${position.left}px`,
+                    transform: 'translate(-50%, -100%)'
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+            >
+                <form onSubmit={handleSaveLink} className="flex items-center gap-1">
+                    <input
+                        type="text"
+                        value={linkUrl}
+                        onChange={(e) => setLinkUrl(e.target.value)}
+                        placeholder="Paste link..."
+                        className="bg-transparent border-none outline-none text-xs text-white placeholder-white/40 min-w-[150px] px-2"
+                        autoFocus
+                        onKeyDown={(e) => e.stopPropagation()} // Allow typing
+                    />
+                    <button type="submit" className="p-1.5 hover:bg-green-500/20 text-green-400 rounded-full transition-colors">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                    </button>
+                    <button type="button" onClick={handleCancelLink} className="p-1.5 hover:bg-white/10 text-slate-300 rounded-full transition-colors">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </form>
+            </div>
+        );
+    }
+
     return (
         <div
-            className="absolute flex items-center gap-0.5 bg-slate-800 text-white rounded-full px-2 py-1.5 shadow-2xl z-[220] animate-in fade-in zoom-in-95 duration-150 border border-white/10 backdrop-blur-sm pointer-events-auto"
+            className="text-formatting-toolbar absolute flex items-center gap-0.5 bg-slate-800 text-white rounded-full px-2 py-1.5 shadow-2xl z-[220] animate-in fade-in zoom-in-95 duration-150 border border-white/10 backdrop-blur-sm pointer-events-auto"
             style={{
                 top: `${position.top - 12}px`,
                 left: `${position.left}px`,
@@ -188,7 +294,7 @@ export const TextFormattingToolbar: React.FC<{ position: { top: number; left: nu
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h18v2H3V3zm4 4h10v2H7V7zm-4 4h18v2H3v-2zm4 4h10v2H7v-2zm-4 4h18v2H3v-2z" /></svg>
             </button>
             <div className="w-px h-4 bg-white/20 mx-1"></div>
-            <button onClick={() => handleFormat('createLink', prompt('Enter URL:') || '')} className="p-2 hover:bg-white/10 rounded-full transition-colors" title="Insert Link">
+            <button onMouseDown={handleLinkClick} className={`p-2 hover:bg-white/10 rounded-full transition-colors ${showLinkInput ? 'bg-white/20' : ''}`} title="Insert Link">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
             </button>
         </div>

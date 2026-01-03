@@ -109,7 +109,7 @@ const App: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-teal-500/50 flex items-center justify-center">✓</div>
-              <span>Professional Enhancv-style Editor</span>
+              <span>Professional Editor Studio</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-teal-500/50 flex items-center justify-center">✓</div>

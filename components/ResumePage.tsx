@@ -46,7 +46,12 @@ const ResumePage: React.FC<Props> = ({ data, content, pageIndex, totalPageCount,
   const TemplateComponent = TemplateMeta?.component;
 
   useEffect(() => {
-    const handleSelection = () => {
+    const handleSelection = (e: MouseEvent) => {
+      // Check if clicking inside toolbar (link input, buttons)
+      if ((e.target as Element).closest('.text-formatting-toolbar')) {
+        return;
+      }
+
       const selection = window.getSelection();
       if (!selection || selection.isCollapsed || isReadOnly || !containerRef.current) {
         setSelectionToolbarPos(null);

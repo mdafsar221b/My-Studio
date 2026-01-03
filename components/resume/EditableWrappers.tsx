@@ -49,22 +49,55 @@ export interface EditableItemProps {
     isReadOnly?: boolean;
     isTextSelected?: boolean;
     onAIRequest?: (e: React.MouseEvent) => void;
+    onReorder?: (sourceId: string, targetId: string) => void;
 }
 
 export const EditableItem: React.FC<EditableItemProps> = ({
-    id, children, isSelected, onSelect, onAdd, onDelete, isReadOnly = false, isTextSelected = false, onAIRequest
+    id, children, isSelected, onSelect, onAdd, onDelete, isReadOnly = false, isTextSelected = false, onAIRequest, onReorder
 }) => {
     const [isHovered, setIsHovered] = useState(false);
+    const [isDragOver, setIsDragOver] = useState(false);
     const showItemToolbar = isSelected && !isReadOnly && !isTextSelected;
+
+    const handleDragStart = (e: React.DragEvent) => {
+        e.dataTransfer.setData('text/plain', id);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        if (!onReorder) return;
+        e.preventDefault();
+        setIsDragOver(true);
+    };
+
+    const handleDragLeave = () => {
+        setIsDragOver(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        if (!onReorder) return;
+        e.preventDefault();
+        setIsDragOver(false);
+        const sourceId = e.dataTransfer.getData('text/plain');
+        if (sourceId && sourceId !== id) {
+            onReorder(sourceId, id);
+        }
+    };
 
     return (
         <div
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={(e) => { if (!isReadOnly) { e.stopPropagation(); onSelect(id); } }}
-            className={`relative transition-all duration-300 ${!isReadOnly && isSelected ? 'ring-1 ring-[#2ECB8F] rounded-lg p-3 -m-3 bg-[#f0fff9]/40 z-[10]' : !isReadOnly ? 'hover:ring-1 hover:ring-slate-200 rounded-lg p-3 -m-3 cursor-text' : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`relative transition-all duration-300 
+                ${!isReadOnly && isSelected ? 'ring-1 ring-[#2ECB8F] rounded-lg p-3 -m-3 bg-[#f0fff9]/40 z-[10]' : !isReadOnly ? 'hover:ring-1 hover:ring-slate-200 rounded-lg p-3 -m-3 cursor-text' : ''}
+                ${isDragOver ? 'border-t-2 border-indigo-500 bg-indigo-50/50' : ''}
+            `}
         >
-            {showItemToolbar && <ItemToolbar onAdd={onAdd} onDelete={onDelete} />}
+            {showItemToolbar && <ItemToolbar onAdd={onAdd} onDelete={onDelete} onDragStart={onReorder ? handleDragStart : undefined} />}
             {onAIRequest && isHovered && !isReadOnly && (
                 <button
                     onClick={(e) => { e.stopPropagation(); onAIRequest(e); }}

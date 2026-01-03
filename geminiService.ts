@@ -6,7 +6,7 @@ const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const parseResume = async (fileText: string): Promise<ResumeData> => {
   const ai = getAI();
-  
+
   const systemInstruction = `You are a world-class professional resume analyst and data engineer. 
   Your mission is to extract EVERY SINGLE DETAIL from the provided resume text without exception.
   
@@ -28,7 +28,7 @@ export const parseResume = async (fileText: string): Promise<ResumeData> => {
     ---`,
     config: {
       systemInstruction,
-      thinkingConfig: { thinkingBudget: 15000 },
+      thinkingConfig: { thinkingBudget: 4000 },
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -110,12 +110,26 @@ export const parseResume = async (fileText: string): Promise<ResumeData> => {
 
   try {
     const parsed = JSON.parse(response.text || '{}');
-    if (parsed.experience) {
-      parsed.experience = parsed.experience.map((e: any, i: number) => ({...e, id: e.id || `exp-${i}-${Date.now()}`}));
-    }
-    if (parsed.education) {
-      parsed.education = parsed.education.map((e: any, i: number) => ({...e, id: e.id || `edu-${i}-${Date.now()}`}));
-    }
+    // Ensure all arrays exist
+    parsed.experience = parsed.experience || [];
+    parsed.education = parsed.education || [];
+    parsed.skills = parsed.skills || [];
+    parsed.certifications = parsed.certifications || [];
+    parsed.achievements = parsed.achievements || [];
+    parsed.sections = parsed.sections || [];
+
+    // Add IDs to experience/education if missing
+    parsed.experience = parsed.experience.map((e: any, i: number) => ({ ...e, id: e.id || `exp-${i}-${Date.now()}` }));
+    parsed.education = parsed.education.map((e: any, i: number) => ({ ...e, id: e.id || `edu-${i}-${Date.now()}` }));
+
+    // Inject default layout for existing sections
+    parsed.layout = {
+      pages: [{
+        left: ['experience', 'education'],
+        right: ['summary', 'achievements', 'skills', 'certifications']
+      }]
+    };
+
     return parsed as ResumeData;
   } catch (e) {
     console.error("JSON parsing failed", e);

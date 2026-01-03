@@ -2,7 +2,7 @@
 import { ResumeData } from "./types";
 
 export const INITIAL_RESUME_DATA: ResumeData = {
-  template: 'double-column',
+  template: 'executive',
   layout: {
     left: ['experience', 'education'],
     right: ['summary', 'certifications', 'achievements']
@@ -34,13 +34,17 @@ export const INITIAL_RESUME_DATA: ResumeData = {
       startDate: "Aug 2013",
       endDate: "Present",
       description: [
-        "Led AI-driven delivery initiatives, including the adoption and refinement of NextGen Estimator, improving delivery predictability.",
-        "Partnered with Engineering and Data Science teams to integrate AI capabilities.",
-        "Led delivery for 14+ large-scale, global enterprise programs for Fortune 500 clients, managing $10M+ budgets."
+        "AI, Automation & Digital Transformation Leadership: Led AI-driven delivery initiatives, including the adoption and refinement of NextGen Estimator, an AI based forecasting and estimation solution, improving delivery predictability and margin planning across multiple engagements.",
+
+
+
+
+
       ],
       keyAchievements: [
-        "Recipient of the Deloitte TSO Outstanding Award for leadership on complex delivery.",
-        "Led program delivery resulting in multi-year client extensions."
+        "Recipient of the Deloitte TSO Outstanding Award for leadership on a highly complex enterprise delivery.",
+        "Led program delivery resulting in multi-year client extensions through consistent value realization.",
+        "Representative Clients: Edward Jones, AstraZeneca, Warner Bros. Discovery, International Olympic Committee, Chevron, Travelers, Walmart, CHI, Banner Health"
       ]
     },
     {
@@ -54,8 +58,36 @@ export const INITIAL_RESUME_DATA: ResumeData = {
         "Worked closely with clients to understand requirements and align solutions with industry best practices.",
         "Delivered application understanding documents, SOPs, and maturity assessments.",
         "Supported implementation of Epic EMR for Revenue Cycle and Ambulatory modules."
+
       ]
-    }
+    },
+    {
+      id: "exp-3",
+      company: "Dr. Agarwal’s Eye Hospital",
+      role: "Senior Executive – Operations / Product Owner",
+      location: "Chennai",
+      startDate: "Aug 2009",
+      endDate: "Apr 2010",
+      description: [
+        "Managed daily OPD operations supporting 100+ patients per shift, leading a team of 14 clinical and non-clinical staff.",
+        "Acted as Product Owner for Hospital Information System (HIS) implementation for OPD workflows.",
+        "Focused on patient experience, cashless hospitalization processes, and workflow optimization."
+      ]
+    },
+    {
+      id: "exp-4",
+      company: "Parekh Health TPA Pvt. Ltd.",
+      role: "Health Benefit Coordinator / Account Management",
+      location: "Bangalore",
+      startDate: "Jun 2008",
+      endDate: "Jul 2009",
+      description: [
+        "Served as the primary point of contact for enterprise client insurance queries and claims coordination.",
+        "Assessed claims to meet strict turnaround times (TAT), working with claims teams, hospitals, brokers, and insurers.",
+        "Supported cashless hospitalization processes and conducted new-joiner policy orientation sessions."
+      ]
+    },
+
   ],
   education: [
     {

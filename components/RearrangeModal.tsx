@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { ResumeData, ResumeLayout } from '../types';
+import { paginateResume } from './resume/pagination';
 
 interface Props {
   data: ResumeData;
@@ -13,17 +14,20 @@ const RearrangeModal: React.FC<Props> = ({ data, onChange, onClose }) => {
   // If data has pages, load them. Else distribute flat layout.
   const [pagesState, setPagesState] = useState<{ left: string[]; right: string[] }[]>(() => {
     if (data.layout?.pages && data.layout.pages.length > 0) {
+      // If user has a saved page layout, use it (but we might want to validate it against content? No, trust user save)
       return data.layout.pages;
     }
 
-    // Fallback: Calculate from flat layout (similar to previous 'pages' derivation)
-    // We do a one-time calculation here to initialize state.
-    // For simplicity, puts everything on Page 1 if migrating.
-    const initialFlat = data.layout || { left: [], right: [] };
-    // Distribute to pages if flat layout exists is a bit complex to do blindly here. 
-    // Ideally we would run the estimation logic, but for now, dump to Page 1.
-    // The user can rearrange then.
-    return [{ left: initialFlat.left || [], right: initialFlat.right || [] }];
+    // Fallback: If no manual page layout exists (just flat lists), run the pagination logic
+    // to get a realistic starting point for the visual editor.
+    const paginated = paginateResume(data);
+
+    // Map PageContent back to simple string arrays for the modal state
+    // Note: The modal doesn't currently support "split" items (itemRange), so we just put the whole item on the page where it starts.
+    return paginated.map(p => ({
+      left: p.left.map(item => item.id),
+      right: p.right.map(item => item.id)
+    }));
   });
 
   const [draggedId, setDraggedId] = useState<string | null>(null);
