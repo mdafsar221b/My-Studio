@@ -1,16 +1,17 @@
 
 import React from 'react';
 import { ResumeData, ResumeLayout, DesignConfig } from '../../../types';
+import { PageContent } from '../pagination';
 
 export interface TemplateProps {
     data: ResumeData;
-    layout: ResumeLayout;
+    pageContent: PageContent;
     design: DesignConfig;
     isReadOnly?: boolean;
+    isFirstPage: boolean;
     onUpdate: (field: string, value: any) => void;
-    // We need to pass the render function or the components to render sections
-    // However, passing a render function is easier for migration.
-    renderSection: (id: string, isDarkBg: boolean) => React.ReactNode;
+    // Render function for sections
+    renderSection: (id: string, isDarkBg: boolean, itemRange?: [number, number]) => React.ReactNode;
 }
 
 export interface TemplateMeta {

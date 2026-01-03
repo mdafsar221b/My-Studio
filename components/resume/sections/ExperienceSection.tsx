@@ -3,8 +3,9 @@ import { Experience, DesignConfig } from '../../../types';
 import { EditableSection, EditableItem } from '../EditableWrappers';
 import { getFontSizeClass, getHeadingSizeClass } from '../utils';
 
-interface ExperienceSectionProps {
+interface Props {
     experiences: Experience[];
+    itemRange?: [number, number];
     design: DesignConfig;
     isDarkBg: boolean;
     isReadOnly: boolean;
@@ -21,8 +22,9 @@ interface ExperienceSectionProps {
     onAIRequest: (e: React.MouseEvent, type: 'summary' | 'experience', text: string, targetId?: string) => void;
 }
 
-export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
+export const ExperienceSection: React.FC<Props> = ({
     experiences,
+    itemRange,
     design,
     isDarkBg,
     isReadOnly,
@@ -39,7 +41,13 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
     onAIRequest
 }) => {
 
+    // Slice data if range provided
+    const displayExperiences = itemRange
+        ? experiences.slice(itemRange[0], itemRange[1])
+        : experiences;
+
     const handleItemFieldUpdate = (id: string, field: keyof Experience, value: string) => {
+        // Update original experiences array
         const newItems = experiences.map(item =>
             item.id === id ? { ...item, [field]: value } : item
         );
@@ -68,7 +76,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
         >
             <h2 className={`text-sm font-bold tracking-[0.2em] uppercase mb-4 ${isDarkBg ? 'text-teal-200 border-b border-teal-800 pb-2' : 'text-slate-400'}`} style={{ color: !isDarkBg ? design.primaryColor + '80' : undefined }}>Experience</h2>
             <div className="space-y-12">
-                {experiences.map(exp => (
+                {displayExperiences.map(exp => (
                     <EditableItem
                         key={exp.id}
                         id={exp.id}
@@ -93,15 +101,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                                 className={`text-sm font-medium ${isDarkBg ? 'text-teal-400' : 'text-slate-400'}`}
                                 contentEditable={!isReadOnly}
                                 suppressContentEditableWarning
-                            // Note: handling date range as single string edit might be complex if they are separate fields in data but rendered together.
-                            // ResumeData says startDate and endDate are fields. 
-                            // The original code rendered `{exp.startDate} - {exp.endDate}` in one span.
-                            // Editing this span will fail to update separate fields correctly without parsing.
-                            // For now, I will bind to 'startDate'? No, that will overwrite startDate with everything.
-                            // Fix: The original code likely intended to edit them separately or didn't support editing dates.
-                            // I will NOT add onBlur here to avoid data corruption, but I will flag this.
-                            // Actually, let's keep it without onBlur to match original behavior for now, or split them.
-                            // Splitting them is better UX:
+                            // Note: Separate date fields editing requires careful handling
                             >
                                 <span onBlur={(e) => handleItemFieldUpdate(exp.id, 'startDate', e.currentTarget.textContent || '')}>{exp.startDate}</span> - <span onBlur={(e) => handleItemFieldUpdate(exp.id, 'endDate', e.currentTarget.textContent || '')}>{exp.endDate}</span>
                             </span>
@@ -134,6 +134,6 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                     </EditableItem>
                 ))}
             </div>
-        </EditableSection>
+        </EditableSection >
     );
 };

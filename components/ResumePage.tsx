@@ -9,10 +9,13 @@ import { SkillsSection } from './resume/sections/SkillsSection';
 import { CertificationsSection } from './resume/sections/CertificationsSection';
 import { AchievementsSection } from './resume/sections/AchievementsSection';
 import { getTemplate } from './resume/templates/registry';
+import { PageContent } from './resume/pagination';
 
 interface Props {
-  page: number;
   data: ResumeData;
+  content: PageContent; // The paginated content for this specific page
+  pageIndex: number;
+  totalPageCount: number;
   onChange: (data: ResumeData) => void;
   isReadOnly?: boolean;
 }
@@ -27,7 +30,7 @@ const DEFAULT_DESIGN: DesignConfig = {
   columnLayout: 2
 };
 
-const ResumePage: React.FC<Props> = ({ page, data, onChange, isReadOnly = false }) => {
+const ResumePage: React.FC<Props> = ({ data, content, pageIndex, totalPageCount, onChange, isReadOnly = false }) => {
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectionToolbarPos, setSelectionToolbarPos] = useState<{ top: number; left: number } | null>(null);
@@ -35,17 +38,12 @@ const ResumePage: React.FC<Props> = ({ page, data, onChange, isReadOnly = false 
   const containerRef = useRef<HTMLDivElement>(null);
 
   const design = data.design || DEFAULT_DESIGN;
+  const isFirstPage = pageIndex === 0;
 
   // Resolve Template
   const templateId = data.template || 'double-column';
   const TemplateMeta = getTemplate(templateId) || getTemplate('double-column');
   const TemplateComponent = TemplateMeta?.component;
-
-  // Page Logic
-  const pageInd = page - 1;
-  const layout = data.layout?.pages
-    ? (data.layout.pages[pageInd] || { left: [], right: [] })
-    : (page === 1 ? (data.layout || { left: ['experience', 'education'], right: ['summary', 'certifications', 'achievements'] }) : { left: [], right: [] });
 
   useEffect(() => {
     const handleSelection = () => {
@@ -200,7 +198,7 @@ const ResumePage: React.FC<Props> = ({ page, data, onChange, isReadOnly = false 
     handleUpdate('achievements', ['New achievement or key milestone.', ...data.achievements]);
   };
 
-  const renderSectionById = (id: string, isDarkBg: boolean) => {
+  const renderSectionById = (id: string, isDarkBg: boolean, itemRange?: [number, number]) => {
     const commonProps = {
       design,
       isDarkBg,
@@ -227,6 +225,7 @@ const ResumePage: React.FC<Props> = ({ page, data, onChange, isReadOnly = false 
           <ExperienceSection
             {...commonProps}
             experiences={data.experience}
+            itemRange={itemRange}
             isTextSelected={isTextSelected}
             onSelectItem={handleSelectItem}
             onUpdate={(val) => handleUpdate('experience', val)}
@@ -241,6 +240,7 @@ const ResumePage: React.FC<Props> = ({ page, data, onChange, isReadOnly = false 
           <EducationSection
             {...commonProps}
             education={data.education}
+            itemRange={itemRange}
             isTextSelected={isTextSelected}
             onSelectItem={handleSelectItem}
             onUpdate={(val) => handleUpdate('education', val)}
@@ -288,7 +288,7 @@ const ResumePage: React.FC<Props> = ({ page, data, onChange, isReadOnly = false 
   return (
     <div
       ref={containerRef}
-      className={`relative flex h-[1123px] w-[794px] overflow-hidden selection:bg-[#00C3A5] selection:text-white`}
+      className={`relative flex h-[1123px] w-[794px] overflow-hidden selection:bg-[#00C3A5] selection:text-white shrink-0`}
       style={commonStyle}
       onClick={() => { if (!isReadOnly) { setSelectedSectionId(null); setSelectedItemId(null); setAiPopup(null); } }}
     >
@@ -304,18 +304,26 @@ const ResumePage: React.FC<Props> = ({ page, data, onChange, isReadOnly = false 
         />
       )}
 
+      {/* Template Rendering */}
+
       {TemplateComponent ? (
         <TemplateComponent
           data={data}
-          layout={layout}
+          pageContent={content} // Pass specific content for this page
           design={design}
           isReadOnly={isReadOnly}
+          isFirstPage={isFirstPage}
           onUpdate={handleUpdate}
           renderSection={renderSectionById}
         />
       ) : (
         <div className="flex items-center justify-center w-full h-full text-slate-400">Template not found</div>
       )}
+
+      {/* Page Number Indicator */}
+      <div className="absolute bottom-4 right-4 text-[10px] text-slate-300 pointer-events-none">
+        Page {pageIndex + 1} of {totalPageCount}
+      </div>
     </div>
   );
 };

@@ -3,9 +3,11 @@ import { Education, DesignConfig } from '../../../types';
 import { EditableSection, EditableItem } from '../EditableWrappers';
 import { getHeadingSizeClass } from '../utils';
 
-interface EducationSectionProps {
+interface Props {
     education: Education[];
+    itemRange?: [number, number];
     design: DesignConfig;
+    // ... (rest same, omit to match context if needed but I will replace the whole block I viewed earlier to be safe)
     isDarkBg: boolean;
     isReadOnly: boolean;
     selectedSectionId: string | null;
@@ -19,8 +21,9 @@ interface EducationSectionProps {
     onDeleteEntry: (id: string) => void;
 }
 
-export const EducationSection: React.FC<EducationSectionProps> = ({
+export const EducationSection: React.FC<Props> = ({
     education,
+    itemRange,
     design,
     isDarkBg,
     isReadOnly,
@@ -34,6 +37,10 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
     onDeleteSection,
     onDeleteEntry
 }) => {
+
+    const displayEducation = itemRange
+        ? education.slice(itemRange[0], itemRange[1])
+        : education;
 
     const handleItemFieldUpdate = (id: string, field: keyof Education, value: string) => {
         const newItems = education.map(item =>
@@ -56,7 +63,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
         >
             <h2 className={`text-sm font-bold tracking-[0.2em] uppercase mb-4 ${isDarkBg ? 'text-teal-200 border-b border-teal-800 pb-2' : 'text-slate-400'}`} style={{ color: !isDarkBg ? design.primaryColor + '80' : undefined }}>Education</h2>
             <div className="space-y-10">
-                {education.map(edu => (
+                {displayEducation.map(edu => (
                     <EditableItem
                         key={edu.id}
                         id={edu.id}
