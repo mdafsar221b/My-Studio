@@ -27,7 +27,12 @@ export interface TemplateMeta {
 import DoubleColumn from './DoubleColumn';
 import IvyLeague from './IvyLeague';
 import Executive from './Executive';
+
 import Modern from './Modern';
+import CreativeWithPhoto from './CreativeWithPhoto';
+import ModernSide from './ModernSide';
+import MinimalistCircle from './MinimalistCircle';
+import ProfessionalHeader from './ProfessionalHeader';
 
 import Minimalist from './Minimalist';
 import Tech from './Tech';
@@ -97,6 +102,38 @@ export const TEMPLATES: TemplateMeta[] = [
         component: IvyLeague,
         isPremium: false,
         tags: ['Academic', 'Tradition'],
+        thumbnailClass: 'bg-slate-800'
+    },
+    {
+        id: 'creative-photo',
+        name: 'Creative w/ Photo',
+        component: CreativeWithPhoto,
+        isPremium: true,
+        tags: ['Artistic', 'Photo', 'Bold'],
+        thumbnailClass: 'bg-rose-400'
+    },
+    {
+        id: 'modern-side',
+        name: 'Modern Side',
+        component: ModernSide,
+        isPremium: true,
+        tags: ['Sleek', 'Photo', 'Dark'],
+        thumbnailClass: 'bg-slate-900'
+    },
+    {
+        id: 'minimalist-circle',
+        name: 'Minimalist Circle',
+        component: MinimalistCircle,
+        isPremium: true,
+        tags: ['Clean', 'Photo', 'Center'],
+        thumbnailClass: 'bg-gray-100'
+    },
+    {
+        id: 'professional-header',
+        name: 'Pro Header',
+        component: ProfessionalHeader,
+        isPremium: true,
+        tags: ['Corporate', 'Photo', 'Header'],
         thumbnailClass: 'bg-slate-800'
     }
 ];

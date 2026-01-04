@@ -15,7 +15,8 @@ import {
     Link,
     Copy,
     Check,
-    Undo2
+    Undo2,
+    Loader2
 } from 'lucide-react';
 import { improveWriting, recruiterReview, generateTailoredSummary, customAIRequest } from '../../geminiService';
 
@@ -29,11 +30,13 @@ export const AIAssistantPopup: React.FC<{
     position: { top: number; left: number };
 }> = ({ type, contextText, onApply, onClose, position }) => {
     const [loading, setLoading] = useState(false);
+    const [loadingAction, setLoadingAction] = useState<string | null>(null);
     const [feedback, setFeedback] = useState<string | null>(null);
     const [customPrompt, setCustomPrompt] = useState('');
 
-    const handleAction = async (action: () => Promise<string>, isFeedback = false) => {
+    const handleAction = async (action: () => Promise<string>, actionName: string, isFeedback = false) => {
         setLoading(true);
+        setLoadingAction(actionName);
         setFeedback(null);
         try {
             const result = await action();
@@ -48,6 +51,7 @@ export const AIAssistantPopup: React.FC<{
             setFeedback("Something went wrong. Please try again.");
         } finally {
             setLoading(false);
+            setLoadingAction(null);
         }
     };
 
@@ -55,6 +59,7 @@ export const AIAssistantPopup: React.FC<{
         <div
             className="fixed z-[300] w-[280px] bg-shades-black-90/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/20 border border-shades-black-80 p-4 animate-in fade-in zoom-in-95 duration-200"
             style={{ top: position.top, left: position.left }}
+            onClick={(e) => e.stopPropagation()}
         >
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -70,31 +75,49 @@ export const AIAssistantPopup: React.FC<{
                 {type === 'summary' && (
                     <button
                         disabled={loading}
-                        onClick={() => handleAction(() => generateTailoredSummary(contextText))}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-shades-black-80 transition-colors group"
+                        onClick={() => handleAction(() => generateTailoredSummary(contextText), 'summary')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group disabled:cursor-wait ${loading && loadingAction === 'summary' ? 'bg-shades-black-80 text-shades-white-100' : 'hover:bg-shades-black-80'}`}
                     >
-                        <Sparkles size={18} className="opacity-60 group-hover:opacity-100 group-hover:text-shades-white-100 group-hover:scale-110 transition-all text-shades-white-80" />
-                        <span className="text-sm font-medium text-shades-white-80 group-hover:text-shades-white-100">Generate Tailored Summary</span>
+                        {loading && loadingAction === 'summary' ? (
+                            <Loader2 size={18} className="animate-spin text-shades-white-100" />
+                        ) : (
+                            <Sparkles size={18} className="opacity-60 group-hover:opacity-100 group-hover:text-shades-white-100 group-hover:scale-110 transition-all text-shades-white-80" />
+                        )}
+                        <span className={`text-sm font-medium transition-colors ${loading && loadingAction === 'summary' ? 'text-shades-white-100' : 'text-shades-white-80 group-hover:text-shades-white-100'}`}>
+                            {loading && loadingAction === 'summary' ? 'Generating...' : 'Generate Tailored Summary'}
+                        </span>
                     </button>
                 )}
 
                 <button
                     disabled={loading}
-                    onClick={() => handleAction(() => improveWriting(contextText))}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-shades-black-80 transition-colors group"
+                    onClick={() => handleAction(() => improveWriting(contextText), 'improve')}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group disabled:cursor-wait ${loading && loadingAction === 'improve' ? 'bg-shades-black-80 text-shades-white-100' : 'hover:bg-shades-black-80'}`}
                 >
-                    <Wand2 size={18} className="opacity-60 group-hover:opacity-100 group-hover:text-shades-white-100 group-hover:scale-110 transition-all text-shades-white-80" />
-                    <span className="text-sm font-medium text-shades-white-80 group-hover:text-shades-white-100">Improve Writing</span>
+                    {loading && loadingAction === 'improve' ? (
+                        <Loader2 size={18} className="animate-spin text-shades-white-100" />
+                    ) : (
+                        <Wand2 size={18} className="opacity-60 group-hover:opacity-100 group-hover:text-shades-white-100 group-hover:scale-110 transition-all text-shades-white-80" />
+                    )}
+                    <span className={`text-sm font-medium transition-colors ${loading && loadingAction === 'improve' ? 'text-shades-white-100' : 'text-shades-white-80 group-hover:text-shades-white-100'}`}>
+                        {loading && loadingAction === 'improve' ? 'Improving...' : 'Improve Writing'}
+                    </span>
                 </button>
 
                 {type === 'experience' && (
                     <button
                         disabled={loading}
-                        onClick={() => handleAction(() => recruiterReview(contextText), true)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-shades-black-80 transition-colors group"
+                        onClick={() => handleAction(() => recruiterReview(contextText), 'review', true)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group disabled:cursor-wait ${loading && loadingAction === 'review' ? 'bg-shades-black-80 text-shades-white-100' : 'hover:bg-shades-black-80'}`}
                     >
-                        <Smile size={18} className="opacity-60 group-hover:opacity-100 group-hover:text-shades-white-100 group-hover:scale-110 transition-all text-shades-white-80" />
-                        <span className="text-sm font-medium text-shades-white-80 group-hover:text-shades-white-100">Recruiter Review</span>
+                        {loading && loadingAction === 'review' ? (
+                            <Loader2 size={18} className="animate-spin text-shades-white-100" />
+                        ) : (
+                            <Smile size={18} className="opacity-60 group-hover:opacity-100 group-hover:text-shades-white-100 group-hover:scale-110 transition-all text-shades-white-80" />
+                        )}
+                        <span className={`text-sm font-medium transition-colors ${loading && loadingAction === 'review' ? 'text-shades-white-100' : 'text-shades-white-80 group-hover:text-shades-white-100'}`}>
+                            {loading && loadingAction === 'review' ? 'Reviewing...' : 'Recruiter Review'}
+                        </span>
                     </button>
                 )}
             </div>
@@ -119,7 +142,7 @@ export const AIAssistantPopup: React.FC<{
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault();
-                            handleAction(() => customAIRequest(customPrompt, contextText));
+                            handleAction(() => customAIRequest(customPrompt, contextText), 'custom');
                         }
                     }}
                     className="w-full bg-shades-black-100/50 border border-shades-black-70 rounded-xl p-3 text-sm text-shades-white-90 placeholder:text-shades-black-60 outline-none focus:border-shades-white-60 focus:bg-shades-black-100 focus:ring-4 focus:ring-shades-white-100/5 transition-all min-h-[80px] resize-none"

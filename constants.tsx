@@ -19,8 +19,8 @@ export const INITIAL_RESUME_DATA: ResumeData = {
   personalInfo: {
     name: "NAMRATA",
     title: "Senior Consulting Manager | Enterprise Program & Delivery Leadership",
-    email: "namrata.isbmax@gmail.com",
-    phone: "+91-8951500438",
+    email: "testwd@gmail.com",
+    phone: "123456789",
     location: "Bangalore, Karnataka, India",
     linkedin: "linkedin.com/in/namrata"
   },
