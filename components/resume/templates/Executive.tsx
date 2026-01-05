@@ -7,7 +7,10 @@ const Executive: React.FC<TemplateProps> = ({ data, pageContent, design, isReadO
         <div className="flex flex-col flex-grow w-full bg-white text-slate-800">
             {/* Header */}
             {isFirstPage && (
-                <div className="text-center p-12 bg-slate-800 text-white">
+                <div
+                    className="text-center p-12 text-white transition-colors duration-300"
+                    style={{ backgroundColor: design.contrastColor || '#1e293b' }}
+                >
                     <h1
                         className="text-5xl font-extrabold tracking-tight mb-2 uppercase"
                         contentEditable={!isReadOnly}

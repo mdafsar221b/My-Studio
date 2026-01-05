@@ -8,6 +8,7 @@ import { EducationSection } from './resume/sections/EducationSection';
 import { SkillsSection } from './resume/sections/SkillsSection';
 import { CertificationsSection } from './resume/sections/CertificationsSection';
 import { AchievementsSection } from './resume/sections/AchievementsSection';
+import { GenericSection } from './resume/sections/GenericSection';
 import { getTemplate } from './resume/templates/registry';
 import { PageContent } from './resume/pagination';
 
@@ -281,6 +282,21 @@ const ResumePage: React.FC<Props> = ({ data, content, pageIndex, totalPageCount,
           />
         );
       default:
+        // Try to find in sections
+        const customSection = data.sections?.find(s => s.id === id);
+        if (customSection) {
+          return (
+            <GenericSection
+              {...commonProps}
+              section={customSection}
+              onUpdate={(updated) => {
+                const newSections = data.sections.map(s => s.id === id ? updated : s);
+                handleUpdate('sections', newSections);
+              }}
+              itemRange={itemRange}
+            />
+          );
+        }
         return null;
     }
   };

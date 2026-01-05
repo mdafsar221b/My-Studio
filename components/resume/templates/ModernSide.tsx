@@ -43,13 +43,12 @@ const ModernSide: React.FC<TemplateProps> = ({ data, pageContent, design, isRead
                 ))}
             </div>
 
-            {/* Sidebar (Right) */}
             <div
-                className={`${rightWeight} flex flex-col bg-slate-900 text-white relative overflow-hidden`}
-                style={{ padding: `${marginPx}px` }}
+                className={`${rightWeight} flex flex-col text-white relative overflow-hidden transition-colors duration-300`}
+                style={{ padding: `${marginPx}px`, backgroundColor: design.contrastColor || '#0f172a' }}
             >
                 {/* Decorative element */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-slate-800 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50 pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-20 pointer-events-none" style={{ backgroundColor: design.primaryColor }}></div>
 
                 {isFirstPage && (
                     <div className="flex flex-col items-center mb-10 relative z-10">

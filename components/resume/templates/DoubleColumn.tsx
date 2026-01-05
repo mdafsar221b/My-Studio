@@ -49,8 +49,8 @@ const DoubleColumn: React.FC<TemplateProps> = ({ data, pageContent, design, isRe
 
             {/* Sidebar (Right) */}
             <div
-                className={`${rightWeight} flex flex-col gap-8 bg-slate-900 text-white`}
-                style={{ padding: `${marginPx}px` }}
+                className={`${rightWeight} flex flex-col gap-8 text-white transition-colors duration-300`}
+                style={{ padding: `${marginPx}px`, backgroundColor: design.contrastColor || '#0f172a' }}
             >
                 {/* Render Right Column Sections */}
                 {pageContent.right && pageContent.right.map(item => (

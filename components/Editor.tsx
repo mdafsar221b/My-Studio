@@ -65,10 +65,25 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
       ] : []
     };
 
-    onChange({
+    const newData = {
       ...data,
       sections: [...(data.sections || []), newSection]
-    });
+    };
+
+    // Add to layout (default to left column of first page or main layout)
+    if (newData.layout?.pages && newData.layout.pages.length > 0) {
+      newData.layout.pages[0].left = [...newData.layout.pages[0].left, newSection.id];
+    } else if (newData.layout) {
+      newData.layout.left = [...(newData.layout.left || []), newSection.id];
+    } else {
+      // Initialize layout if missing
+      newData.layout = {
+        left: ['experience', 'education', newSection.id],
+        right: ['summary', 'achievements', 'skills', 'certifications']
+      };
+    }
+
+    onChange(newData);
     setIsSectionModalOpen(false);
   };
 

@@ -63,6 +63,9 @@ export interface DesignConfig {
   margins: number;
   sectionSpacing: number;
   primaryColor: string;
+  secondaryColor?: string;
+  accentColor?: string;
+  contrastColor?: string;
   fontFamily: string;
   fontSize: 'small' | 'normal' | 'large';
   lineHeight: number;

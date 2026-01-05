@@ -9,8 +9,14 @@ const Creative: React.FC<TemplateProps> = ({ data, pageContent, design, isReadOn
             {isFirstPage && (
                 <div className="relative p-12 pb-24 overflow-hidden">
                     {/* Abstract Shapes */}
-                    <div className="absolute top-[-50%] right-[-10%] w-[600px] h-[600px] rounded-full bg-rose-200/50 blur-3xl"></div>
-                    <div className="absolute bottom-[0%] left-[-10%] w-[300px] h-[300px] rounded-full bg-orange-100/50 blur-2xl"></div>
+                    <div
+                        className="absolute top-[-50%] right-[-10%] w-[600px] h-[600px] rounded-full blur-3xl transition-colors duration-300"
+                        style={{ backgroundColor: design.accentColor || '#fecdd3', opacity: 0.5 }}
+                    />
+                    <div
+                        className="absolute bottom-[0%] left-[-10%] w-[300px] h-[300px] rounded-full blur-2xl transition-colors duration-300"
+                        style={{ backgroundColor: design.secondaryColor || '#ffedd5', opacity: 0.3 }}
+                    />
 
                     <div className="relative z-10 flex flex-col items-start gap-4">
                         <h1
@@ -21,7 +27,7 @@ const Creative: React.FC<TemplateProps> = ({ data, pageContent, design, isReadOn
                             onBlur={(e) => onUpdate('personalInfo.name', e.currentTarget.textContent)}
                         >
                             {data.personalInfo.name.split(' ')[0]}<br />
-                            <span className="text-rose-500">{data.personalInfo.name.split(' ').slice(1).join(' ')}</span>
+                            <span style={{ color: design.primaryColor || '#f43f5e' }}>{data.personalInfo.name.split(' ').slice(1).join(' ')}</span>
                         </h1>
                         <p
                             className="text-xl font-medium italic text-slate-500"

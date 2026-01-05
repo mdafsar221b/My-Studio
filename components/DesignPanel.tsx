@@ -9,8 +9,18 @@ interface Props {
   isEmbeded?: boolean;
 }
 
-const COLORS = ['#007BFF', '#00C3A5', '#D0021B', '#9013FE', '#00BCD4', '#2C3E50'];
+
+
 const FONTS = ['Inter', 'Rubik', 'Roboto', 'Playfair Display', 'Merriweather', 'Lora'];
+
+const COLOR_PALETTES = [
+  { name: 'Modern Teal', primary: '#00C3A5', secondary: '#115e59', accent: '#ccfbf5', contrast: '#001e1d' },
+  { name: 'Professional Blue', primary: '#2563eb', secondary: '#1e40af', accent: '#dbeafe', contrast: '#1e3a8a' },
+  { name: 'Creative Pink', primary: '#db2777', secondary: '#9d174d', accent: '#fce7f3', contrast: '#831843' },
+  { name: 'Elegant Violet', primary: '#7c3aed', secondary: '#5b21b6', accent: '#ede9fe', contrast: '#4c1d95' },
+  { name: 'Sunset Orange', primary: '#ea580c', secondary: '#9a3412', accent: '#ffedd5', contrast: '#7c2d12' },
+  { name: 'Nature Green', primary: '#059669', secondary: '#047857', accent: '#d1fae5', contrast: '#064e3b' },
+];
 
 const DesignPanel: React.FC<Props> = ({ design, onChange, onClose, isEmbeded = false }) => {
   const updateDesign = (key: keyof DesignConfig, value: any) => {
@@ -27,64 +37,36 @@ const DesignPanel: React.FC<Props> = ({ design, onChange, onClose, isEmbeded = f
       </div>
 
       <div className="flex-grow overflow-y-auto p-6 space-y-10 pb-20 custom-scrollbar">
-        {/* Page Margins */}
-        <section>
-          <div className="flex justify-between items-center mb-6">
-            <span className="text-[10px] font-bold text-shades-black-60 uppercase tracking-widest">Page Margins: {design.margins}</span>
-          </div>
-          <div className="relative h-6 flex items-center px-2 mb-2">
-            <div className="absolute left-2 right-2 h-1 bg-shades-black-80 rounded-full"></div>
-            <input
-              type="range" min="1" max="5" step="1"
-              value={design.margins}
-              onChange={(e) => updateDesign('margins', parseInt(e.target.value))}
-              className="w-full relative z-10 accent-shades-white-100 h-1 appearance-none bg-transparent cursor-pointer"
-            />
-          </div>
-          <div className="flex justify-between text-[9px] text-shades-black-60 font-bold uppercase tracking-wider px-2">
-            <span>narrow</span>
-            <span>wide</span>
-          </div>
-        </section>
+        {/* ... existing sections ... */}
 
-        {/* Section Spacing */}
+        {/* Color Theme */}
         <section>
-          <div className="flex justify-between items-center mb-6">
-            <span className="text-[10px] font-bold text-shades-black-60 uppercase tracking-widest">Section Spacing: {design.sectionSpacing}</span>
-          </div>
-          <div className="relative h-6 flex items-center px-2 mb-2">
-            <div className="absolute left-2 right-2 h-1 bg-shades-black-80 rounded-full"></div>
-            <input
-              type="range" min="1" max="5" step="1"
-              value={design.sectionSpacing}
-              onChange={(e) => updateDesign('sectionSpacing', parseInt(e.target.value))}
-              className="w-full relative z-10 accent-shades-white-100 h-1 appearance-none bg-transparent cursor-pointer"
-            />
-          </div>
-          <div className="flex justify-between text-[9px] text-shades-black-60 font-bold uppercase tracking-wider px-2">
-            <span>compact</span>
-            <span>more space</span>
-          </div>
-        </section>
-
-        <div className="h-px bg-shades-black-80 mx-2"></div>
-
-        {/* Colors */}
-        <section>
-          <span className="text-[10px] font-bold text-shades-black-60 uppercase tracking-widest mb-6 block">Colors</span>
-          <div className="grid grid-cols-5 gap-3">
-            {COLORS.map((c) => (
+          <span className="text-[10px] font-bold text-shades-black-60 uppercase tracking-widest mb-6 block">Color Theme</span>
+          <div className="grid grid-cols-2 gap-3">
+            {COLOR_PALETTES.map((palette, idx) => (
               <button
-                key={c}
-                onClick={() => updateDesign('primaryColor', c)}
-                className={`aspect-square rounded-full border-2 transition-all flex items-center justify-center ${design.primaryColor === c ? 'border-indigo-500 scale-110 shadow-lg' : 'border-transparent hover:scale-105'}`}
-                style={{ backgroundColor: c }}
+                key={idx}
+                onClick={() => {
+                  onChange({
+                    ...design,
+                    primaryColor: palette.primary,
+                    secondaryColor: palette.secondary,
+                    accentColor: palette.accent,
+                    contrastColor: palette.contrast
+                  });
+                }}
+                className={`flex flex-col gap-2 p-2 rounded-xl border-2 transition-all ${design.primaryColor === palette.primary ? 'border-shades-white-100 bg-shades-white-100/5' : 'border-shades-black-80 hover:border-shades-black-60 hover:bg-shades-black-80'}`}
               >
-                {design.primaryColor === c && <span className="text-white text-[10px] font-bold">✓</span>}
+                <div className="flex h-12 w-full rounded-lg overflow-hidden ring-1 ring-white/10">
+                  <div className="flex-1 h-full" style={{ backgroundColor: palette.primary }} title="Primary"></div>
+                  <div className="flex-1 h-full" style={{ backgroundColor: palette.secondary }} title="Secondary"></div>
+                  <div className="flex-1 h-full" style={{ backgroundColor: palette.accent }} title="Accent"></div>
+                  <div className="flex-1 h-full" style={{ backgroundColor: palette.contrast }} title="Background"></div>
+                </div>
+                <span className={`text-[10px] font-bold uppercase tracking-wider self-start ${design.primaryColor === palette.primary ? 'text-shades-white-100' : 'text-shades-black-60'}`}>{palette.name}</span>
               </button>
             ))}
           </div>
-          <button className="mt-6 text-[11px] font-bold text-indigo-500 hover:text-indigo-700 transition-colors uppercase tracking-widest underline decoration-2 underline-offset-4">Use custom color</button>
         </section>
 
         <div className="h-px bg-slate-100 mx-2"></div>

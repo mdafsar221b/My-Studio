@@ -7,7 +7,10 @@ const Startup: React.FC<TemplateProps> = ({ data, pageContent, design, isReadOnl
         <div className="flex flex-col flex-grow w-full bg-white text-slate-900 selection:bg-black selection:text-white">
             {/* Heavy Header */}
             {isFirstPage && (
-                <div className="bg-black text-white p-14 pb-20 clip-path-slant">
+                <div
+                    className="text-white p-14 pb-20 clip-path-slant transition-colors duration-300"
+                    style={{ backgroundColor: design.contrastColor || '#000000' }}
+                >
                     {/* Header Branding */}
                     <div className="flex justify-between items-end">
                         <div>
@@ -19,7 +22,7 @@ const Startup: React.FC<TemplateProps> = ({ data, pageContent, design, isReadOnl
                             >
                                 {data.personalInfo.name}
                             </h1>
-                            <div className="h-1 w-20 bg-lime-400 mt-2 mb-4"></div>
+                            <div className="h-1 w-20 mt-2 mb-4" style={{ backgroundColor: design.primaryColor || '#a3e635' }}></div>
                             <p
                                 className="text-lg font-medium text-slate-300"
                                 contentEditable={!isReadOnly}
@@ -32,7 +35,7 @@ const Startup: React.FC<TemplateProps> = ({ data, pageContent, design, isReadOnl
                         <div className="text-right text-sm font-mono text-slate-400 space-y-1">
                             <div contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => onUpdate('personalInfo.email', e.currentTarget.textContent)}>{data.personalInfo.email}</div>
                             <div contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => onUpdate('personalInfo.phone', e.currentTarget.textContent)}>{data.personalInfo.phone}</div>
-                            <div className="text-lime-400" contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => onUpdate('personalInfo.location', e.currentTarget.textContent)}>{data.personalInfo.location}</div>
+                            <div style={{ color: design.primaryColor || '#a3e635' }} contentEditable={!isReadOnly} suppressContentEditableWarning onBlur={(e) => onUpdate('personalInfo.location', e.currentTarget.textContent)}>{data.personalInfo.location}</div>
                         </div>
                     </div>
                 </div>

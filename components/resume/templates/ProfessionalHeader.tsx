@@ -10,7 +10,10 @@ const ProfessionalHeader: React.FC<TemplateProps> = ({ data, pageContent, design
         <div className="flex flex-col flex-grow w-full bg-white text-slate-800">
             {/* Header Background */}
             {isFirstPage && (
-                <div className="bg-slate-900 text-white pt-16 pb-24 px-16 relative mb-24">
+                <div
+                    className="text-white pt-16 pb-24 px-16 relative mb-24 transition-colors duration-300"
+                    style={{ background: `linear-gradient(135deg, ${design.contrastColor || '#0f172a'} 0%, ${design.primaryColor || '#1e293b'} 100%)` }}
+                >
                     <div className="flex justify-between items-start">
                         <div className="max-w-[60%]">
                             <h1
