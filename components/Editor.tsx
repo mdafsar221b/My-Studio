@@ -3,6 +3,8 @@ import React, { useState, useMemo } from 'react';
 import { Command, Eye, Download, Plus, Minus, Loader2 } from 'lucide-react';
 import { ResumeData, CustomSection, TemplateType, DesignConfig } from '../types';
 import Sidebar from './Sidebar';
+import { paginateResume } from './resume/pagination';
+import { generatePDF } from './resume/utils/pdf-generator';
 import ResumePage from './ResumePage';
 import SectionModal from './SectionModal';
 import TemplatePanel from './TemplatePanel';
@@ -12,8 +14,8 @@ import DesignPanel from './DesignPanel';
 import ImproveTextPanel from './ImproveTextPanel';
 import DownloadPanel from './DownloadPanel';
 import PreviewModal from './PreviewModal';
-import { paginateResume } from './resume/pagination';
-import { generatePDF } from './resume/utils/pdf-generator';
+import ShareModal from './ShareModal';
+import TourGuide from './TourGuide';
 
 interface Props {
   data: ResumeData;
@@ -35,6 +37,7 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
   const [isDownloadPanelOpen, setIsDownloadPanelOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const isSidebarCollapsed = isTemplatePanelOpen || isDesignPanelOpen || isImprovePanelOpen || isDownloadPanelOpen;
@@ -131,6 +134,16 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
         />
       )}
 
+      {isShareModalOpen && (
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          data={data}
+        />
+      )}
+
+      <TourGuide />
+
       {/* Header */}
       <div className="h-16 bg-shades-black-100 border-b border-shades-black-80 z-[60] flex items-center justify-between px-6 flex-shrink-0">
         <div className="flex items-center gap-4">
@@ -214,6 +227,15 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
               setIsImprovePanelOpen(false);
               setIsDownloadPanelOpen(!isDownloadPanelOpen);
             }}
+            onOpenShare={() => {
+              setIsSectionModalOpen(false);
+              setIsTemplatePanelOpen(false);
+              setIsRearrangeModalOpen(false);
+              setIsDesignPanelOpen(false);
+              setIsImprovePanelOpen(false);
+              setIsDownloadPanelOpen(false);
+              setIsShareModalOpen(true);
+            }}
             onUndo={onUndo}
             onRedo={onRedo}
             canUndo={canUndo}
@@ -277,6 +299,7 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
             {/* Dynamic Page Rendering */}
             <div className="absolute top-0 -right-20 flex flex-col gap-3">
               <button
+                id="preview-button"
                 onClick={() => setIsPreviewModalOpen(true)}
                 className="w-12 h-12 bg-shades-black-90 rounded-full text-shades-white-60 border border-shades-black-80 shadow-lg hover:text-white hover:bg-shades-black-80 hover:scale-110 active:scale-95 transition-all flex items-center justify-center group relative"
                 title="Preview Resume"
@@ -286,6 +309,7 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
               </button>
 
               <button
+                id="download-button"
                 onClick={async () => {
                   setIsDownloading(true);
                   try {

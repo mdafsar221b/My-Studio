@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Palette, Sparkles, Share2, History, Undo2, LayoutTemplate, ArrowRightLeft, Plus, Check, Link, Download } from 'lucide-react';
+import { Palette, Sparkles, Share2, History, Undo2, LayoutTemplate, ArrowRightLeft, Plus, Check, Link, Download, HelpCircle } from 'lucide-react';
 import { ResumeData } from '../types';
+import { startTour } from './TourGuide';
 
 interface Props {
   data: ResumeData;
@@ -12,6 +13,7 @@ interface Props {
   onOpenDesign: () => void;
   onOpenImprove: () => void;
   onOpenDownload: () => void;
+  onOpenShare: () => void;
   onOpenPremium: () => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -30,6 +32,7 @@ const Sidebar: React.FC<Props> = ({
   onOpenDesign,
   onOpenImprove,
   onOpenDownload,
+  onOpenShare,
   onOpenPremium,
   onUndo,
   onRedo,
@@ -58,6 +61,7 @@ const Sidebar: React.FC<Props> = ({
     if (id === 'design') onOpenDesign();
     if (id === 'improve') onOpenImprove();
     if (id === 'download') onOpenDownload();
+    if (id === 'share') onOpenShare();
     if (id === 'premium') onOpenPremium();
     if (id === 'undo') onUndo();
   };
@@ -138,6 +142,7 @@ const Sidebar: React.FC<Props> = ({
             <div key={item.id} className="w-full">
               {(item.id === 'improve' || item.id === 'download') && !isCollapsed && <div className="mx-4 h-px bg-shades-black-80 my-2"></div>}
               <button
+                id={`sidebar-${item.id}`}
                 onClick={() => handleClick(item.id)}
                 className={`w-full flex items-center group transition-all relative rounded-xl ${isCollapsed ? 'justify-center py-4' : 'px-4 py-3 hover:bg-shades-black-90'} ${isActive ? 'bg-shades-black-80 text-shades-white-100 shadow-md shadow-black/20' : 'text-shades-white-60'}`}
                 title={isCollapsed ? item.label : ''}
@@ -159,8 +164,28 @@ const Sidebar: React.FC<Props> = ({
       </div>
 
       <div className={`mt-auto pt-6 border-t border-shades-black-80 ${isCollapsed ? 'pb-4' : 'px-6 pb-6'}`}>
-        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
-          {!isCollapsed && <span className="text-xs font-semibold text-shades-white-80 uppercase tracking-wider">My Studio</span>}
+        <div className={`flex items-center ${isCollapsed ? 'justify-center flex-col gap-4' : 'justify-between'}`}>
+          {!isCollapsed && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => startTour(true)}
+                className="flex items-center gap-2 text-xs font-semibold text-shades-white-80 hover:text-white transition-colors group"
+              >
+                <HelpCircle size={14} className="group-hover:scale-110 transition-transform" />
+                <span>Help</span>
+              </button>
+            </div>
+          )}
+          {isCollapsed && (
+            <button
+              onClick={() => startTour(true)}
+              className="w-8 h-8 rounded-full bg-shades-black-90 flex items-center justify-center text-shades-white-60 hover:text-white hover:bg-shades-black-80 transition-all mb-2"
+              title="Help / Restart Tour"
+            >
+              <HelpCircle size={14} />
+            </button>
+          )}
+
           <div className={`w-8 h-8 rounded-full bg-shades-black-80 flex items-center justify-center border border-shades-black-70 shadow-lg shadow-black/20 ${isCollapsed ? 'scale-75' : ''}`}>
             <span className="text-shades-white-100 text-xs font-bold">M</span>
           </div>
