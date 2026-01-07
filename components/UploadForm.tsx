@@ -16,20 +16,18 @@ const UploadForm: React.FC<Props> = ({ onParsed }) => {
   const [isParsing, setIsParsing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const extractTextFromPDF = async (arrayBuffer: ArrayBuffer): Promise<string> => {
-    const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
-    const pdf = await loadingTask.promise;
-    let fullText = '';
-
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(' ');
-      fullText += pageText + '\n\n';
-    }
-    return fullText;
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+      
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,35 +38,24 @@ const UploadForm: React.FC<Props> = ({ onParsed }) => {
     setError(null);
 
     try {
-      let rawText = '';
-      const arrayBuffer = await file.arrayBuffer();
-
-      if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-        rawText = await extractTextFromPDF(arrayBuffer);
-      } else if (
-        file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-        file.name.endsWith('.docx')
-      ) {
-        const result = await mammoth.extractRawText({ arrayBuffer });
-        rawText = result.value;
-      } else {
-        // Fallback for .txt files
-        const reader = new FileReader();
-        rawText = await new Promise((resolve) => {
-          reader.onload = (event) => resolve(event.target?.result as string);
-          reader.readAsText(file);
-        });
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error("File size exceeds 10MB limit.");
       }
 
-      if (!rawText || rawText.trim().length < 50) {
-        throw new Error("Extracted text is too short or empty. The file might be corrupted or image-only.");
+      const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+      if (!validTypes.includes(file.type) && !file.name.endsWith('.pdf') && !file.name.endsWith('.docx') && !file.name.endsWith('.txt')) {
+        throw new Error("Unsupported file type. Please upload PDF, DOCX, or TXT.");
       }
 
-      const parsedData = await parseResume(rawText);
+      const base64Data = await fileToBase64(file);
+      const mimeType = file.type || (file.name.endsWith('.pdf') ? 'application/pdf' : 'text/plain');
+
+    
+      const parsedData = await parseResume(base64Data, mimeType);
       onParsed(parsedData);
 
     } catch (err: any) {
-      setError(err.message || "Failed to parse resume. Please ensure it's a valid text-based file.");
+      setError(err.message || "Failed to parse resume. Please ensure it's a valid file.");
       console.error("Parsing error:", err);
     } finally {
       setIsParsing(false);
@@ -82,7 +69,7 @@ const UploadForm: React.FC<Props> = ({ onParsed }) => {
       <div className="relative border-2 border-dashed border-shades-black-80 rounded-xl p-8 transition-all hover:border-shades-white-60 bg-shades-white-100/5 group">
         <input
           type="file"
-          accept=".txt,.pdf,.docx"
+          accept=".pdf,.docx,.txt"
           onChange={handleFileUpload}
           disabled={isParsing}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"

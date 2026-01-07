@@ -4,11 +4,26 @@ import { ResumeData } from './types';
 import { INITIAL_RESUME_DATA } from './constants';
 import Editor from './components/Editor';
 import UploadForm from './components/UploadForm';
-import { Sparkles, Palette, Zap, Check, ArrowRight } from 'lucide-react';
+import { Sparkles, Palette, Zap, Check, ArrowRight, Sun, Moon } from 'lucide-react';
 
 const MAX_HISTORY = 50;
 
 const App: React.FC = () => {
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  // Toggle Theme Effect
+  React.useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('light-theme');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
   const [history, setHistory] = useState<{
     past: ResumeData[];
     present: ResumeData | null;
@@ -91,16 +106,28 @@ const App: React.FC = () => {
         onRedo={redo}
         canUndo={history.past.length > 0}
         canRedo={history.future.length > 0}
+        theme={theme}
+        toggleTheme={toggleTheme}
       />
     );
   }
 
   return (
-    <div className="min-h-screen bg-shades-black-100 flex items-center justify-center p-4 selection:bg-shades-black-70 selection:text-white relative overflow-hidden">
+    <div className="min-h-screen bg-shades-black-100 flex items-center justify-center p-4 selection:bg-shades-black-70 selection:text-shades-white-100 relative overflow-hidden">
       {/* Background Decor - Removed colorful blobs for clean look */}
 
       <div className="max-w-5xl w-full bg-shades-black-90 rounded-3xl shadow-2xl shadow-black/50 overflow-hidden flex flex-col md:flex-row border border-shades-black-80 relative z-10">
-        <div className="md:w-1/2 p-12 flex flex-col justify-center bg-shades-black-100/50 text-white relative overflow-hidden border-r border-shades-black-80">
+        <div className="md:w-1/2 p-12 flex flex-col justify-center bg-shades-black-100/50 text-shades-white-100 relative overflow-hidden border-r border-shades-black-80">
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="absolute top-6 right-6 p-3 rounded-full bg-shades-black-80 text-shades-white-90 hover:bg-shades-black-70 hover:scale-110 transition-all shadow-lg z-50 border border-shades-black-60"
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+          >
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+
 
           <div className="relative z-10">
             <h1 className="text-5xl font-bold mb-6 tracking-tight text-shades-white-100">Architect <br /><span className="text-shades-white-60">Your Career.</span></h1>

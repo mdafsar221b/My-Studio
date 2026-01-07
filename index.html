@@ -8,23 +8,24 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
                         shades: {
                             black: {
-                                100: '#0A0E15',
-                                90: '#212631',
-                                80: '#373F4E',
-                                70: '#4E576A',
-                                60: '#667085',
+                                100: 'var(--color-black-100)',
+                                90: 'var(--color-black-90)',
+                                80: 'var(--color-black-80)',
+                                70: 'var(--color-black-70)',
+                                60: 'var(--color-black-60)',
                             },
                             white: {
-                                100: '#FFFFFF',
-                                90: '#F0F1F5',
-                                80: '#E0E4E8',
-                                70: '#D1D6E0',
-                                60: '#BFC6D4',
+                                100: 'var(--color-white-100)',
+                                90: 'var(--color-white-90)',
+                                80: 'var(--color-white-80)',
+                                70: 'var(--color-white-70)',
+                                60: 'var(--color-white-60)',
                             }
                         }
                     }
@@ -36,11 +37,53 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&family=Rubik:wght@400;500;700&family=Roboto:wght@400;500;700&family=Lora:ital,wght@0,400;0,700;1,400&family=Merriweather:wght@400;700&display=swap"
         rel="stylesheet">
     <style>
+        :root {
+            /* Dark Theme (Default) - Rich Navy/Blacks */
+            --color-black-100: #0A0E15;
+            --color-black-90: #212631;
+            --color-black-80: #373F4E;
+            --color-black-70: #4E576A;
+            --color-black-60: #667085;
+
+            --color-white-100: #FFFFFF;
+            --color-white-90: #F0F1F5;
+            --color-white-80: #E0E4E8;
+            --color-white-70: #D1D6E0;
+            --color-white-60: #BFC6D4;
+        }
+
+        .light-theme {
+            /* Premium Light Theme - Crisp Whites & Cool Grays */
+            --color-black-100: #F0F4F8;
+            /* Main Background */
+            --color-black-90: #FFFFFF;
+            /* Surface/Card */
+            --color-black-80: #E2E8F0;
+            /* Border */
+            --color-black-70: #CBD5E1;
+            /* Secondary Border */
+            --color-black-60: #94A3B8;
+            /* Muted */
+
+            --color-white-100: #0F172A;
+            /* Main Text */
+            --color-white-90: #1E293B;
+            /* Secondary Text */
+            --color-white-80: #334155;
+            /* Tertiary Text */
+            --color-white-70: #475569;
+            /* Muted Text */
+            --color-white-60: #64748B;
+            /* Placeholder */
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background-color: var(--color-black-100);
+            color: var(--color-white-100);
             margin: 0;
             padding: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .resume-shadow {
@@ -54,23 +97,23 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #0A0E15;
+            background: var(--color-black-100);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #373F4E;
+            background: var(--color-black-80);
             border-radius: 10px;
-            border: 2px solid #0A0E15;
+            border: 2px solid var(--color-black-100);
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #4E576A;
+            background: var(--color-black-70);
         }
 
         /* For Firefox */
         * {
             scrollbar-width: thin;
-            scrollbar-color: #373F4E #0A0E15;
+            scrollbar-color: var(--color-black-80) var(--color-black-100);
         }
 
         .vertical-rl {

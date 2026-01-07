@@ -4,31 +4,47 @@ import { ResumeData } from "./types";
 
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export const parseResume = async (fileText: string): Promise<ResumeData> => {
+export const parseResume = async (base64Data: string, mimeType: string): Promise<ResumeData> => {
   const ai = getAI();
 
   const systemInstruction = `You are a world-class professional resume analyst and data engineer. 
-  Your mission is to extract EVERY SINGLE DETAIL from the provided resume text without exception.
+  Your mission is to extract EVERY SINGLE DETAIL from the provided resume document image/file verbatim.
   
   STRICT RULES:
-  1. ZERO OMISSION: Capture all company names, dates, locations, bullet points, certifications, and skills.
-  2. NORMALIZATION: Format dates consistently (e.g., "MM/YYYY" or "Month YYYY").
-  3. STRUCTURE: Organize the raw data into the specified JSON format.
-  4. CLEANING: Remove artifacts from PDF/DOCX parsing but retain all meaningful content.
-  5. LOGIC: If a role is "Present", ensure it's marked as such.
-  6. EXHAUSTIVE EXTRACTION: If a resume has 20 bullet points, extract all 20. Do not summarize unless necessary to fit the field.`;
+  1. EXHAUSTIVE EXTRACTION: Do not summarize. If the user lists 10 bullet points, you MUST extract all 10 exactly as written.
+  2. DATA PRESERVATION: Capture every single skill, technology, tool, and certification mentioned.
+  3. STRUCTURE: Organize the data strictly into the JSON schema provided.
+  4. NORMALIZATION: Standardize date formats to "MM/YYYY" or "Month YYYY".
+  5. HANDLING GAPS: If a field is missing, leave it as an empty string or empty array. Do not hallucinate data.
+  6. RICH CONTENT: Ensure descriptions are captured in full richness, preserving technical terms and metrics.
+  7. VISUAL CONTEXT: Use the layout to distinguish between sections (e.g., sidebars vs main content).`;
+
+  console.log("--- STARTING RESUME PARSING ---");
+  console.log("MIME Type:", mimeType);
+  console.log("Data Length:", base64Data.length);
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: `EXTRACT AND NORMALIZE THE FOLLOWING RESUME TEXT INTO JSON.
-    
-    SOURCE TEXT:
-    ---
-    ${fileText}
-    ---`,
+    model: "gemini-2.0-flash-exp",
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            text: "EXTRACT THE FOLLOWING RESUME DOCUMENT INTO JSON WITH 100% FIDELITY. CAPTURE ALL TEXT VISIBLE."
+          },
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType: mimeType
+            }
+          }
+        ]
+      }
+    ],
     config: {
       systemInstruction,
-      thinkingConfig: { thinkingBudget: 4000 },
+      maxOutputTokens: 10000, 
+      temperature: 0.1, 
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -109,7 +125,15 @@ export const parseResume = async (fileText: string): Promise<ResumeData> => {
   });
 
   try {
-    const parsed = JSON.parse(response.text || '{}');
+    const responseText = response.text || '{}';
+    console.log("--- RAW AI RESPONSE ---");
+    console.log(responseText.substring(0, 500) + "..."); 
+
+    const parsed = JSON.parse(responseText);
+
+    console.log("--- PARSED DATA OBJECT ---");
+    console.log(JSON.stringify(parsed, null, 2));
+
     // Ensure all arrays exist
     parsed.experience = parsed.experience || [];
     parsed.education = parsed.education || [];

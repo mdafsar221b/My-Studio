@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Command, Eye, Download, Plus, Minus, Loader2 } from 'lucide-react';
+import { Command, Eye, Download, Plus, Minus, Loader2, Sun, Moon } from 'lucide-react';
 import { ResumeData, CustomSection, TemplateType, DesignConfig } from '../types';
 import Sidebar from './Sidebar';
 import { paginateResume } from './resume/pagination';
@@ -25,9 +25,11 @@ interface Props {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  theme: 'dark' | 'light';
+  toggleTheme: () => void;
 }
 
-const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUndo, canRedo }) => {
+const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUndo, canRedo, theme, toggleTheme }) => {
   const [zoom, setZoom] = useState(85);
   const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
   const [isTemplatePanelOpen, setIsTemplatePanelOpen] = useState(false);
@@ -156,6 +158,16 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
         </div>
 
         <div className="flex items-center gap-6">
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full text-shades-black-60 hover:text-shades-white-100 hover:bg-shades-black-80 transition-all"
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+          >
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+
           <div className="flex items-center gap-4 text-sm text-shades-black-60">
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-shades-black-60 shadow-[0_0_8px_rgba(102,112,133,0.5)]"></span>
@@ -168,6 +180,7 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
           </div>
         </div>
       </div>
+
 
       {/* Main Body */}
       <div className="flex flex-grow overflow-hidden relative">
