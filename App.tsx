@@ -1,15 +1,17 @@
-
 import React, { useState, useCallback } from 'react';
 import { ResumeData } from './types';
 import { INITIAL_RESUME_DATA } from './constants';
 import Editor from './components/Editor';
-import UploadForm from './components/UploadForm';
-import { Sparkles, Palette, Zap, Check, ArrowRight, Sun, Moon } from 'lucide-react';
+import { UploadForm } from './components/UploadForm'; // Named import
+import LandingPage from './components/LandingPage';
+import TemplateSelector from './components/TemplateSelector';
+import { Sun, Moon } from 'lucide-react';
 
 const MAX_HISTORY = 50;
 
 const App: React.FC = () => {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [view, setView] = useState<'landing' | 'templates' | 'editor'>('landing');
 
   // Toggle Theme Effect
   React.useEffect(() => {
@@ -33,7 +35,6 @@ const App: React.FC = () => {
     present: null,
     future: [],
   });
-  const [isEditing, setIsEditing] = useState(false);
 
   const setResumeData = useCallback((newData: ResumeData) => {
     setHistory(prev => {
@@ -88,20 +89,27 @@ const App: React.FC = () => {
 
   const handleResumeParsed = (data: ResumeData) => {
     setHistory({ past: [], present: data, future: [] });
-    setIsEditing(true);
+    setView('editor');
   };
 
-  const startWithSample = () => {
-    setHistory({ past: [], present: INITIAL_RESUME_DATA, future: [] });
-    setIsEditing(true);
+  const handleCreateNew = () => {
+    setView('templates');
   };
 
-  if (isEditing && history.present) {
+  const handleTemplateSelect = (templateId: string) => {
+    // Start with sample data but override template
+    const newData = { ...INITIAL_RESUME_DATA, template: templateId as any };
+    setHistory({ past: [], present: newData, future: [] });
+    setView('editor');
+  };
+
+  // Views
+  if (view === 'editor' && history.present) {
     return (
       <Editor
         data={history.present}
         onChange={setResumeData}
-        onBack={() => setIsEditing(false)}
+        onBack={() => setView('landing')}
         onUndo={undo}
         onRedo={redo}
         canUndo={history.past.length > 0}
@@ -112,68 +120,41 @@ const App: React.FC = () => {
     );
   }
 
+  if (view === 'templates') {
+    return (
+      <>
+        <button
+          onClick={toggleTheme}
+          className="fixed top-6 right-6 p-3 rounded-full bg-shades-black-90 text-shades-white-90 hover:bg-shades-black-80 hover:scale-110 transition-all shadow-lg z-50 border border-shades-black-70"
+          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+        >
+          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+        <TemplateSelector
+          onSelect={handleTemplateSelect}
+          onBack={() => setView('landing')}
+        />
+      </>
+    );
+  }
+
+  // Default: Landing Page
   return (
-    <div className="min-h-screen bg-shades-black-100 flex items-center justify-center p-4 selection:bg-shades-black-70 selection:text-shades-white-100 relative overflow-hidden">
-      {/* Background Decor - Removed colorful blobs for clean look */}
+    <>
+      {/* Global Theme Toggle for Landing (Absolute Position) */}
+      <button
+        onClick={toggleTheme}
+        className="fixed top-6 right-6 p-3 rounded-full bg-shades-black-90 text-shades-white-90 hover:bg-shades-black-80 hover:scale-110 transition-all shadow-lg z-50 border border-shades-black-70"
+        title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+      >
+        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+      </button>
 
-      <div className="max-w-5xl w-full bg-shades-black-90 rounded-3xl shadow-2xl shadow-black/50 overflow-hidden flex flex-col md:flex-row border border-shades-black-80 relative z-10">
-        <div className="md:w-1/2 p-12 flex flex-col justify-center bg-shades-black-100/50 text-shades-white-100 relative overflow-hidden border-r border-shades-black-80">
-
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="absolute top-6 right-6 p-3 rounded-full bg-shades-black-80 text-shades-white-90 hover:bg-shades-black-70 hover:scale-110 transition-all shadow-lg z-50 border border-shades-black-60"
-            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
-          >
-            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-
-
-          <div className="relative z-10">
-            <h1 className="text-5xl font-bold mb-6 tracking-tight text-shades-white-100">Architect <br /><span className="text-shades-white-60">Your Career.</span></h1>
-            <p className="text-shades-white-80 text-lg mb-10 leading-relaxed font-light">
-              Transform your experience into a masterpiece. Our AI engine parses every detail into a stunning, high-performance layout.
-            </p>
-            <div className="space-y-5">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-shades-black-80 border border-shades-black-70 flex items-center justify-center text-shades-white-90">
-                  <Sparkles size={20} />
-                </div>
-                <span className="font-medium text-shades-white-90">AI-Powered Detailed Parsing</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-shades-black-80 border border-shades-black-70 flex items-center justify-center text-shades-white-90">
-                  <Palette size={20} />
-                </div>
-                <span className="font-medium text-shades-white-90">Professional Studio Editor</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-shades-black-80 border border-shades-black-70 flex items-center justify-center text-shades-white-90">
-                  <Zap size={20} />
-                </div>
-                <span className="font-medium text-shades-white-90">Real-time Layout Engine</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="md:w-1/2 p-12 flex flex-col justify-center bg-shades-black-90">
-          <UploadForm onParsed={handleResumeParsed} />
-          <div className="mt-10 pt-8 border-t border-shades-black-80 flex flex-col items-center">
-            <p className="text-shades-white-60 text-sm mb-4">No resume yet?</p>
-            <button
-              onClick={startWithSample}
-              className="px-8 py-3 rounded-xl border border-shades-black-70 bg-shades-black-100 text-shades-white-90 hover:bg-shades-black-80 hover:text-white hover:border-shades-black-60 transition-all font-medium text-sm flex items-center gap-2 group"
-            >
-              <span>Start with Sample</span>
-              <span className="text-shades-white-60 group-hover:text-white transition-colors">
-                <ArrowRight size={16} />
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+      <LandingPage
+        onCreateNew={handleCreateNew}
+        onUploadSuccess={handleResumeParsed}
+      />
+    </>
   );
 };
 

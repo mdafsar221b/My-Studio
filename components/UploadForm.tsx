@@ -1,18 +1,15 @@
-
 import React, { useState } from 'react';
 import { parseResume } from '../geminiService';
 import { ResumeData } from '../types';
-import * as pdfjs from 'pdfjs-dist';
-import mammoth from 'mammoth';
-
-// Initialize PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `https://esm.sh/pdfjs-dist@4.0.189/build/pdf.worker.min.mjs`;
+import { Upload } from 'lucide-react';
+import SkeletonLoader from './SkeletonLoader';
 
 interface Props {
   onParsed: (data: ResumeData) => void;
+  isEmbedded?: boolean;
 }
 
-const UploadForm: React.FC<Props> = ({ onParsed }) => {
+export const UploadForm: React.FC<Props> = ({ onParsed, isEmbedded }) => {
   const [isParsing, setIsParsing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +18,7 @@ const UploadForm: React.FC<Props> = ({ onParsed }) => {
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result as string;
-      
+
         const base64 = result.split(',')[1];
         resolve(base64);
       };
@@ -50,8 +47,11 @@ const UploadForm: React.FC<Props> = ({ onParsed }) => {
       const base64Data = await fileToBase64(file);
       const mimeType = file.type || (file.name.endsWith('.pdf') ? 'application/pdf' : 'text/plain');
 
-    
       const parsedData = await parseResume(base64Data, mimeType);
+
+      // Artificial delay if it's too fast, just to show the skeleton (optional, but good for UX)
+      await new Promise(r => setTimeout(r, 2000));
+
       onParsed(parsedData);
 
     } catch (err: any) {
@@ -62,40 +62,43 @@ const UploadForm: React.FC<Props> = ({ onParsed }) => {
     }
   };
 
-  return (
-    <div className="w-full">
-      <h2 className="text-2xl font-bold text-shades-white-100 mb-6">Start Building</h2>
+  if (isParsing) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-shades-black-100/90 backdrop-blur-md flex flex-col items-center justify-center p-8">
+        <div className="mb-8 text-center">
+          <h3 className="text-2xl font-bold text-shades-white-100 mb-2">Analyzing Document Structure</h3>
+          <p className="text-shades-white-60">Extracting work history, skills, and achievements...</p>
+        </div>
+        <div className="scale-[0.4] md:scale-[0.6] origin-top">
+          <SkeletonLoader />
+        </div>
+      </div>
+    );
+  }
 
-      <div className="relative border-2 border-dashed border-shades-black-80 rounded-xl p-8 transition-all hover:border-shades-white-60 bg-shades-white-100/5 group">
+  return (
+    <div className="w-full h-full">
+      <div className={`relative border-2 border-dashed border-shades-black-80 rounded-xl p-8 transition-all hover:border-shades-white-60 bg-shades-white-100/5 group h-full flex flex-col items-center justify-center ${isEmbedded ? 'border-none bg-transparent p-0' : ''}`}>
         <input
           type="file"
           accept=".pdf,.docx,.txt"
           onChange={handleFileUpload}
           disabled={isParsing}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-20"
         />
         <div className="text-center">
-          <div className="w-16 h-16 bg-shades-black-90 rounded-full shadow-sm flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-            {isParsing ? (
-              <svg className="animate-spin h-8 w-8 text-shades-white-100" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            ) : (
-              <svg className="w-8 h-8 text-shades-black-60 group-hover:text-shades-white-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-            )}
+          <div className="w-16 h-16 bg-shades-black-90 rounded-full shadow-sm flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform border border-shades-black-80">
+            <Upload size={24} className="text-shades-black-60 group-hover:text-shades-white-100" />
           </div>
           <p className="text-shades-white-80 font-medium">
-            {isParsing ? 'Deep Analyzing Content...' : 'Upload PDF or DOCX'}
+            Upload PDF or DOCX
           </p>
-          <p className="text-shades-black-60 text-sm mt-1">Multi-stage AI extraction with zero omission</p>
+          <p className="text-shades-black-60 text-sm mt-1">Multi-stage AI extraction</p>
         </div>
       </div>
 
       {error && (
-        <div className="mt-4 p-4 bg-red-900/20 text-red-200 rounded-lg text-sm border border-red-900/50 flex items-start gap-3">
+        <div className="mt-4 p-4 bg-red-900/20 text-red-200 rounded-lg text-sm border border-red-900/50 flex items-start gap-3 relative z-30">
           <span className="text-lg">⚠️</span>
           <span>{error}</span>
         </div>
@@ -104,4 +107,3 @@ const UploadForm: React.FC<Props> = ({ onParsed }) => {
   );
 };
 
-export default UploadForm;

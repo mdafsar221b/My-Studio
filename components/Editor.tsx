@@ -41,8 +41,41 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [zenMode, setZenMode] = useState(false);
 
   const isSidebarCollapsed = isTemplatePanelOpen || isDesignPanelOpen || isImprovePanelOpen || isDownloadPanelOpen;
+
+  // Zen Mode Logic: Fade out chrome when user types
+  React.useEffect(() => {
+    const handleFocus = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      // Trigger on textareas, inputs, or contenteditable elements
+      if (target.tagName === 'TEXTAREA' || (target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'text') || target.isContentEditable) {
+        setZenMode(true);
+      }
+    };
+
+    const handleBlur = (e: FocusEvent) => {
+      // Small delay to prevent flickering involved in switching inputs
+      setTimeout(() => {
+        // Only unset if we haven't moved to another valid input
+        const active = document.activeElement as HTMLElement;
+        const isInput = active.tagName === 'TEXTAREA' || (active.tagName === 'INPUT' && (active as HTMLInputElement).type === 'text') || active.isContentEditable;
+        if (!isInput) {
+          setZenMode(false);
+        }
+      }, 200);
+    };
+
+    // Use capture to catch events that might not bubble (focus doesn't bubble, but capture works)
+    window.addEventListener('focus', handleFocus, true);
+    window.addEventListener('blur', handleBlur, true);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus, true);
+      window.removeEventListener('blur', handleBlur, true);
+    };
+  }, []);
 
   // Calculate pagination on data change
   const pages = useMemo(() => {
@@ -147,7 +180,7 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
       <TourGuide />
 
       {/* Header */}
-      <div className="h-16 bg-shades-black-100 border-b border-shades-black-80 z-[60] flex items-center justify-between px-6 flex-shrink-0">
+      <div className={`h-16 bg-shades-black-100 border-b border-shades-black-80 z-[60] flex items-center justify-between px-6 flex-shrink-0 transition-opacity duration-700 ease-in-out ${zenMode ? 'opacity-10 hover:opacity-100' : 'opacity-100'}`}>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-shades-white-100">
             <Command size={24} />
@@ -185,7 +218,7 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
       {/* Main Body */}
       <div className="flex flex-grow overflow-hidden relative">
         {/* Sidebar Controls */}
-        <div className={`${isSidebarCollapsed ? 'w-[72px]' : 'w-[260px]'} flex-shrink-0 bg-shades-black-100 border-r border-shades-black-80 flex flex-col z-[50] transition-all duration-300`}>
+        <div className={`${isSidebarCollapsed ? 'w-[72px]' : 'w-[260px]'} flex-shrink-0 bg-shades-black-100 border-r border-shades-black-80 flex flex-col z-[50] transition-all duration-300 ${zenMode ? 'opacity-10 hover:opacity-100' : 'opacity-100'}`}>
           <Sidebar
             data={data}
             onChange={onChange}
@@ -259,7 +292,7 @@ const Editor: React.FC<Props> = ({ data, onChange, onBack, onUndo, onRedo, canUn
         </div>
 
         {/* Secondary Panels Area (Design, Templates, Improve, Download) */}
-        <div className="flex relative h-full">
+        <div className={`flex relative h-full transition-opacity duration-700 ease-in-out ${zenMode ? 'opacity-10 hover:opacity-100' : 'opacity-100'}`}>
           {isTemplatePanelOpen && (
             <div className="w-[320px] h-full flex-shrink-0">
               <TemplatePanel
